@@ -50,7 +50,7 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <div className="relative z-10 flex-1 flex items-center justify-center px-5 sm:px-10 pb-10 pt-2 lg:py-14">
+        <div className="relative z-10 flex-1 flex items-center justify-center px-5 sm:px-10 pb-16 sm:pb-20 pt-2 lg:py-14">
           {step === "credentials"
             ? <CredentialsCard
                 onSuccess={(email, pwd) => {

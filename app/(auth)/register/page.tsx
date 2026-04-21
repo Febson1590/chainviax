@@ -1,36 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { registerUser } from "@/lib/actions/auth";
 import {
-  Eye, EyeOff, Lock, Mail, User, Phone, Globe, MapPin,
+  Eye, EyeOff, Lock, Mail, User, Phone, Globe,
   Loader2, AlertCircle, Check, ArrowRight, ArrowLeft,
-  ShieldCheck, Info,
+  ShieldCheck, Info, ChevronDown, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 
-/* ─ Country list ────────────────────────────────────────────────────── */
-const COUNTRIES = [
-  "Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia",
-  "Austria","Azerbaijan","Bahrain","Bangladesh","Belgium","Bolivia","Bosnia",
-  "Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia",
-  "Costa Rica","Croatia","Cuba","Czech Republic","Denmark","Ecuador","Egypt",
-  "El Salvador","Estonia","Ethiopia","Finland","France","Georgia","Germany",
-  "Ghana","Greece","Guatemala","Honduras","Hong Kong","Hungary","India",
-  "Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan",
-  "Jordan","Kazakhstan","Kenya","Kuwait","Lebanon","Libya","Lithuania",
-  "Malaysia","Mexico","Moldova","Morocco","Mozambique","Myanmar","Netherlands",
-  "New Zealand","Nigeria","Norway","Oman","Pakistan","Panama","Paraguay","Peru",
-  "Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia",
-  "Senegal","Serbia","Singapore","South Africa","South Korea","Spain",
-  "Sri Lanka","Sweden","Switzerland","Taiwan","Tanzania","Thailand","Tunisia",
-  "Turkey","Uganda","Ukraine","United Arab Emirates","United Kingdom",
-  "United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen",
-  "Zimbabwe",
+/* ─ Country list with ISO-3166-1 alpha-2 codes for emoji flags ─────── */
+const COUNTRIES: Array<{ name: string; code: string }> = [
+  { name: "Afghanistan", code: "AF" },{ name: "Albania", code: "AL" },{ name: "Algeria", code: "DZ" },
+  { name: "Angola", code: "AO" },{ name: "Argentina", code: "AR" },{ name: "Armenia", code: "AM" },
+  { name: "Australia", code: "AU" },{ name: "Austria", code: "AT" },{ name: "Azerbaijan", code: "AZ" },
+  { name: "Bahrain", code: "BH" },{ name: "Bangladesh", code: "BD" },{ name: "Belgium", code: "BE" },
+  { name: "Bolivia", code: "BO" },{ name: "Bosnia", code: "BA" },{ name: "Brazil", code: "BR" },
+  { name: "Bulgaria", code: "BG" },{ name: "Cambodia", code: "KH" },{ name: "Cameroon", code: "CM" },
+  { name: "Canada", code: "CA" },{ name: "Chile", code: "CL" },{ name: "China", code: "CN" },
+  { name: "Colombia", code: "CO" },{ name: "Costa Rica", code: "CR" },{ name: "Croatia", code: "HR" },
+  { name: "Cuba", code: "CU" },{ name: "Czech Republic", code: "CZ" },{ name: "Denmark", code: "DK" },
+  { name: "Ecuador", code: "EC" },{ name: "Egypt", code: "EG" },{ name: "El Salvador", code: "SV" },
+  { name: "Estonia", code: "EE" },{ name: "Ethiopia", code: "ET" },{ name: "Finland", code: "FI" },
+  { name: "France", code: "FR" },{ name: "Georgia", code: "GE" },{ name: "Germany", code: "DE" },
+  { name: "Ghana", code: "GH" },{ name: "Greece", code: "GR" },{ name: "Guatemala", code: "GT" },
+  { name: "Honduras", code: "HN" },{ name: "Hong Kong", code: "HK" },{ name: "Hungary", code: "HU" },
+  { name: "India", code: "IN" },{ name: "Indonesia", code: "ID" },{ name: "Iran", code: "IR" },
+  { name: "Iraq", code: "IQ" },{ name: "Ireland", code: "IE" },{ name: "Israel", code: "IL" },
+  { name: "Italy", code: "IT" },{ name: "Jamaica", code: "JM" },{ name: "Japan", code: "JP" },
+  { name: "Jordan", code: "JO" },{ name: "Kazakhstan", code: "KZ" },{ name: "Kenya", code: "KE" },
+  { name: "Kuwait", code: "KW" },{ name: "Lebanon", code: "LB" },{ name: "Libya", code: "LY" },
+  { name: "Lithuania", code: "LT" },{ name: "Malaysia", code: "MY" },{ name: "Mexico", code: "MX" },
+  { name: "Moldova", code: "MD" },{ name: "Morocco", code: "MA" },{ name: "Mozambique", code: "MZ" },
+  { name: "Myanmar", code: "MM" },{ name: "Netherlands", code: "NL" },{ name: "New Zealand", code: "NZ" },
+  { name: "Nigeria", code: "NG" },{ name: "Norway", code: "NO" },{ name: "Oman", code: "OM" },
+  { name: "Pakistan", code: "PK" },{ name: "Panama", code: "PA" },{ name: "Paraguay", code: "PY" },
+  { name: "Peru", code: "PE" },{ name: "Philippines", code: "PH" },{ name: "Poland", code: "PL" },
+  { name: "Portugal", code: "PT" },{ name: "Qatar", code: "QA" },{ name: "Romania", code: "RO" },
+  { name: "Russia", code: "RU" },{ name: "Saudi Arabia", code: "SA" },{ name: "Senegal", code: "SN" },
+  { name: "Serbia", code: "RS" },{ name: "Singapore", code: "SG" },{ name: "South Africa", code: "ZA" },
+  { name: "South Korea", code: "KR" },{ name: "Spain", code: "ES" },{ name: "Sri Lanka", code: "LK" },
+  { name: "Sweden", code: "SE" },{ name: "Switzerland", code: "CH" },{ name: "Taiwan", code: "TW" },
+  { name: "Tanzania", code: "TZ" },{ name: "Thailand", code: "TH" },{ name: "Tunisia", code: "TN" },
+  { name: "Turkey", code: "TR" },{ name: "Uganda", code: "UG" },{ name: "Ukraine", code: "UA" },
+  { name: "United Arab Emirates", code: "AE" },{ name: "United Kingdom", code: "GB" },
+  { name: "United States", code: "US" },{ name: "Uruguay", code: "UY" },{ name: "Uzbekistan", code: "UZ" },
+  { name: "Venezuela", code: "VE" },{ name: "Vietnam", code: "VN" },{ name: "Yemen", code: "YE" },
+  { name: "Zimbabwe", code: "ZW" },
 ];
+
+function flagEmoji(code: string): string {
+  return [...code.toUpperCase()].map((c) =>
+    String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
+  ).join("");
+}
 
 const PWD_RULES = [
   { label: "At least 8 characters",     test: (p: string) => p.length >= 8 },
@@ -133,7 +159,7 @@ export default function RegisterPage() {
              style={{ background: "radial-gradient(circle, rgba(244,196,64,0.22), transparent 70%)" }} />
       </div>
 
-      <div className="relative min-h-screen flex flex-col items-center px-5 sm:px-8 py-10 sm:py-14">
+      <div className="relative min-h-screen flex flex-col items-center px-5 sm:px-8 pt-10 sm:pt-14 pb-16 sm:pb-20">
         {/* Top: Logo */}
         <Logo size="md" href="/" className="justify-center" />
 
@@ -208,20 +234,13 @@ export default function RegisterPage() {
                 <label className="block text-[13px] font-semibold text-white mb-2.5">
                   Country / Region <span className="text-red-400">*</span>
                 </label>
-                <div className="relative">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
-                  <select
-                    value={form.country}
-                    onChange={set("country")}
-                    className="chainviax-login-input w-full pl-[46px] pr-10 h-[56px] rounded-[12px] text-[14.5px] appearance-none cursor-pointer [&>option]:bg-[#0a0c14] [&>option]:text-white"
-                  >
-                    <option value="">Select your country…</option>
-                    {COUNTRIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 h-[15px] w-[15px] text-slate-500 pointer-events-none" />
-                </div>
+                <CountryDropdown
+                  value={form.country}
+                  onChange={(name) => {
+                    setForm((f) => ({ ...f, country: name }));
+                    if (errors.country) setErrors((e) => { const { country: _d, ...rest } = e; return rest; });
+                  }}
+                />
                 {errors.country && (
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
                     <AlertCircle size={11} /> {errors.country}
@@ -454,3 +473,104 @@ function Stepper({ step }: { step: number }) {
     </div>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Country dropdown — searchable, with emoji flags (Binance/Stripe quality)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+function CountryDropdown({ value, onChange }: { value: string; onChange: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    setTimeout(() => inputRef.current?.focus(), 40);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const selected = COUNTRIES.find((c) => c.name === value);
+  const filtered = query.trim()
+    ? COUNTRIES.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
+    : COUNTRIES;
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="chainviax-login-input w-full h-[56px] pl-[46px] pr-10 rounded-[12px] text-[14.5px] text-left flex items-center cursor-pointer"
+      >
+        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
+        {selected
+          ? <span className="flex items-center gap-2 text-white">
+              <span className="text-[20px] leading-none">{flagEmoji(selected.code)}</span>
+              <span className="font-medium">{selected.name}</span>
+            </span>
+          : <span className="text-slate-400/70">Select your country…</span>}
+        <ChevronDown
+          className={`absolute right-4 top-1/2 -translate-y-1/2 h-[16px] w-[16px] text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-30 left-0 right-0 mt-2 rounded-[14px] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.7)]"
+             style={{
+               background: "linear-gradient(180deg, rgba(14,16,24,0.98) 0%, rgba(8,10,16,0.98) 100%)",
+               border: "1px solid rgba(244,196,64,0.22)",
+               backdropFilter: "blur(18px) saturate(125%)",
+               WebkitBackdropFilter: "blur(18px) saturate(125%)",
+             }}>
+          {/* Search */}
+          <div className="relative border-b border-white/[0.06] p-2.5">
+            <Search className="absolute left-[22px] top-1/2 -translate-y-1/2 h-[14px] w-[14px] text-slate-500" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country…"
+              className="w-full h-10 rounded-[10px] bg-white/[0.03] border border-white/[0.08] pl-10 pr-3 text-[13px] text-white placeholder:text-slate-500 outline-none focus:border-amber-500/45 focus:bg-amber-500/[0.03] transition-colors"
+            />
+          </div>
+          {/* List */}
+          <ul className="max-h-[280px] overflow-y-auto py-1.5" style={{ scrollbarWidth: "thin" }}>
+            {filtered.length === 0 ? (
+              <li className="px-4 py-3 text-[13px] text-slate-400">No countries match &ldquo;{query}&rdquo;</li>
+            ) : filtered.map((c) => {
+              const isSel = c.name === value;
+              return (
+                <li key={c.code}>
+                  <button
+                    type="button"
+                    onClick={() => { onChange(c.name); setOpen(false); setQuery(""); }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] text-left transition-colors ${
+                      isSel
+                        ? "bg-amber-500/[0.10] text-amber-200"
+                        : "text-slate-200 hover:bg-white/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <span className="text-[20px] leading-none">{flagEmoji(c.code)}</span>
+                    <span className="flex-1 font-medium">{c.name}</span>
+                    {isSel && <Check size={14} className="text-amber-300" strokeWidth={3} />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+

@@ -32,31 +32,28 @@ export interface EmailSummaryCard {
 }
 
 function buildSummaryCardHtml(card: EmailSummaryCard): string {
-  const title = card.title ?? "Transaction Summary";
-  /* High-contrast badge palettes that read clearly on both light- and
-     dark-mode email clients — background hex stays dark, text stays
-     vivid, and the border is wide enough to survive colour inversion. */
+  // Green, neutral, and warning palettes used by the status pill.
   const statusPalette = {
-    success: { bg: "#052e1a", border: "#22C55E", color: "#22C55E" },
-    neutral: { bg: "#0b2540", border: "#facc15", color: "#facc15" },
-    warning: { bg: "#3a2410", border: "#F59E0B", color: "#F59E0B" },
+    success: { bg: "#062012", border: "rgba(34,197,94,0.45)", color: "#4ade80" },
+    neutral: { bg: "#1a1a22", border: "rgba(244,196,64,0.45)", color: "#f4c440" },
+    warning: { bg: "#2a1a06", border: "rgba(245,158,11,0.55)", color: "#f59e0b" },
   }[card.statusColor ?? "success"];
 
   const statusPill = card.status
     ? `
       <tr>
-        <td align="right" style="padding:0 0 8px 0;">
+        <td align="center" style="padding:0 0 18px 0;">
           <span style="
             display:inline-block;
-            background-color:${statusPalette.bg} !important;
-            color:${statusPalette.color} !important;
+            background-color:${statusPalette.bg};
+            color:${statusPalette.color};
             border:1px solid ${statusPalette.border};
             border-radius:999px;
-            font-size:10.5px;
+            font-size:11px;
             font-weight:700;
-            letter-spacing:0.08em;
+            letter-spacing:0.16em;
             text-transform:uppercase;
-            padding:4px 10px;
+            padding:6px 16px;
           ">${card.status}</span>
         </td>
       </tr>`
@@ -66,19 +63,20 @@ function buildSummaryCardHtml(card: EmailSummaryCard): string {
     .map(
       (r) => `
       <tr>
-        <td style="padding:10px 0;border-top:1px solid #1F2937;">
+        <td style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06);">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="
                 font-size:11px;
-                font-weight:600;
-                letter-spacing:0.08em;
+                font-weight:700;
+                letter-spacing:0.14em;
                 text-transform:uppercase;
-                color:#9CA3AF !important;
+                color:#a1a5ae !important;
               ">${r.label}</td>
               <td align="right" style="
-                font-size:12.5px;
-                color:#FFFFFF !important;
+                font-size:13.5px;
+                font-weight:500;
+                color:#ffffff !important;
                 font-family:${r.mono ? "'SFMono-Regular',Menlo,Consolas,monospace" : "inherit"};
                 word-break:break-all;
               ">${r.value}</td>
@@ -92,56 +90,38 @@ function buildSummaryCardHtml(card: EmailSummaryCard): string {
   const secondaryHtml = card.secondary
     ? `
       <p style="
-        margin:4px 0 0 0;
+        margin:10px 0 0 0;
         font-size:13px;
-        color:#9CA3AF !important;
+        color:#a1a5ae !important;
         text-align:center;
       ">${card.secondary.value}</p>`
     : "";
 
   return `
-    <!-- Transaction summary card -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px 0;">
+    <!-- Transaction summary card (clean, no glow, thin hairline borders) -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
       <tr>
-        <td bgcolor="#0B1220" style="
-          background-color:#0B1220 !important;
-          border:1px solid #1F2937;
-          border-radius:12px;
-          padding:20px 22px;
+        <td bgcolor="#0a0b10" style="
+          background-color:#0a0b10 !important;
+          border:1px solid rgba(255,255,255,0.06);
+          border-radius:14px;
+          padding:26px 24px 22px 24px;
         ">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             ${statusPill}
             <tr>
-              <td align="center" style="padding-bottom:6px;">
+              <td align="center" style="padding:0 0 6px 0;">
                 <div style="
-                  font-size:11px;
-                  font-weight:600;
-                  letter-spacing:0.12em;
-                  text-transform:uppercase;
-                  color:#9CA3AF !important;
-                ">${title}</div>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding-bottom:12px;">
-                <div style="
-                  font-size:11px;
-                  font-weight:600;
-                  letter-spacing:0.08em;
-                  text-transform:uppercase;
-                  color:#9CA3AF !important;
-                  margin-bottom:2px;
-                ">${card.primary.label}</div>
-                <div style="
-                  font-size:28px;
+                  font-size:30px;
                   font-weight:700;
-                  color:#FFFFFF !important;
-                  letter-spacing:-0.5px;
-                  line-height:1.15;
+                  color:#ffffff !important;
+                  letter-spacing:-0.6px;
+                  line-height:1.1;
                 ">${card.primary.value}</div>
                 ${secondaryHtml}
               </td>
             </tr>
+            <tr><td style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
             ${rowsHtml}
           </table>
         </td>
@@ -158,14 +138,18 @@ function buildNotificationEmail(opts: {
 }): string {
   const { name, heading, body, cta, summaryCard } = opts;
 
-  const paragraphs = body
+  // Prepend a soft greeting unless the first line already starts with "Hi"
+  const startsWithGreeting = body[0]?.trim().toLowerCase().startsWith("hi ");
+  const bodyWithGreeting = startsWithGreeting ? body : [`Hi ${name},`, ...body];
+
+  const paragraphs = bodyWithGreeting
     .map(
-      (p) => `
+      (p, i) => `
       <p style="
-        margin:0 0 16px 0;
-        font-size:14px;
-        line-height:1.7;
-        color:#cbd5e1 !important;
+        margin:0 0 ${i === 0 ? 22 : 18}px 0;
+        font-size:14.5px;
+        line-height:1.65;
+        color:#a1a5ae !important;
         text-align:center;
       ">${p}</p>`
     )
@@ -175,36 +159,38 @@ function buildNotificationEmail(opts: {
 
   const ctaBlock = cta
     ? `
-      <!-- CTA Button -->
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;margin-bottom:8px;">
+      <!-- CTA Button — gold, full width, subtle -->
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:4px 0 0 0;">
         <tr>
-          <td align="center" style="background-color:#0d1b2e !important;">
+          <td align="center">
             <a href="${cta.url}" target="_blank" rel="noopener noreferrer" style="
-              display:inline-block;
-              background-color:#eab308;
-              color:#ffffff !important;
-              font-size:14px;
-              font-weight:600;
+              display:block;
+              background:linear-gradient(180deg,#ffe38a 0%,#f5c94c 45%,#e0a51e 100%);
+              color:#1b1205 !important;
+              font-size:14.5px;
+              font-weight:700;
               text-decoration:none;
-              padding:12px 32px;
-              border-radius:8px;
+              padding:15px 24px;
+              border-radius:12px;
               letter-spacing:0.02em;
+              border:1px solid rgba(255,232,150,0.55);
+              text-align:center;
             ">${cta.label}</a>
           </td>
         </tr>
       </table>`
     : "";
 
-  /* Palette — unified across light + dark mode clients. All key
-     backgrounds use explicit `bgcolor` attributes (not just CSS)
-     because Gmail, Outlook, and iOS Mail all strip / override CSS
-     differently. `bgcolor` is respected everywhere. */
-  const BG_PAGE    = "#0B1220";   // deep navy page background
-  const BG_CARD    = "#111827";   // card surface (slightly lighter)
-  const BORDER     = "#1F2937";   // subtle borders + dividers
-  const TEXT_WHITE = "#FFFFFF";
-  const TEXT_MUTED = "#9CA3AF";
-  const ACCENT     = "#eab308";   // sky accent bar
+  /* Palette — clean black + gold. Every important surface uses both
+     bgcolor and inline style so Gmail/Outlook/iOS Mail render consistently. */
+  const BG_PAGE    = "#05060a";   // near-black page background
+  const BG_CARD    = "#0b0c12";   // card surface
+  const BORDER     = "rgba(255,255,255,0.06)"; // thin hairlines
+  const CARD_BORDER = "rgba(244,196,64,0.14)"; // very subtle gold hairline on card
+  const TEXT_WHITE = "#ffffff";
+  const TEXT_MUTED = "#a1a5ae";
+  const TEXT_DIM   = "#6b7080";
+  const GOLD       = "#f4c440";
 
   return /* html */ `
 <!DOCTYPE html>
@@ -217,14 +203,9 @@ function buildNotificationEmail(opts: {
   <meta name="supported-color-schemes" content="dark only" />
   <title>${heading}</title>
   <style>
-    /* Force dark palette regardless of the client's user preference.
-       Gmail / iOS Mail / Outlook Web all honour these when paired
-       with the bgcolor attributes below. */
     :root { color-scheme: dark; }
     body, table, td { color: ${TEXT_WHITE} !important; }
-    a { color: ${ACCENT} !important; }
-    /* Gmail dark-mode quirk: without this, it sometimes auto-inverts
-       already-dark backgrounds into near-white. */
+    a { color: ${GOLD} !important; }
     u + .body .gmail-dark-safe { background-color: ${BG_PAGE} !important; }
     @media (prefers-color-scheme: dark) {
       body, table, td { background-color: ${BG_PAGE} !important; }
@@ -247,87 +228,56 @@ function buildNotificationEmail(opts: {
     <tr>
       <td align="center" bgcolor="${BG_PAGE}" style="padding:40px 16px;background-color:${BG_PAGE} !important;">
 
-        <!-- Container card — max 580px -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;">
-
-          <!-- ─── HEADER (small logo on dark page) ────────────────────── -->
-          <tr>
-            <td align="center" bgcolor="${BG_PAGE}" style="padding:8px 0 28px 0;background-color:${BG_PAGE} !important;">
-              <img
-                src="${LOGO_URL}"
-                alt="Chainviax"
-                width="140"
-                height="39"
-                style="display:block;border:0;width:140px;height:39px;outline:none;-ms-interpolation-mode:bicubic;"
-              />
-            </td>
-          </tr>
+        <!-- Container — max 520px -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
 
           <!-- ─── CARD ───────────────────────────────────────────────── -->
           <tr>
             <td bgcolor="${BG_CARD}" style="
               background-color:${BG_CARD} !important;
-              border-radius:16px;
-              border:1px solid ${BORDER};
-              overflow:hidden;
+              border-radius:18px;
+              border:1px solid ${CARD_BORDER};
             ">
 
-              <!-- Card top accent bar -->
+              <!-- Card header: centered logo + thin gold hairline -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td bgcolor="${ACCENT}" style="height:3px;line-height:3px;font-size:0;background-color:${ACCENT} !important;border-radius:16px 16px 0 0;">&nbsp;</td>
+                  <td align="center" style="padding:36px 40px 20px 40px;">
+                    <img
+                      src="${LOGO_URL}"
+                      alt="Chainviax"
+                      width="180"
+                      height="42"
+                      style="display:block;border:0;width:180px;height:42px;outline:none;-ms-interpolation-mode:bicubic;"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="height:1px;line-height:1px;font-size:0;background:linear-gradient(90deg,transparent,rgba(244,196,64,0.35),transparent);">&nbsp;</td>
                 </tr>
               </table>
 
               <!-- Card content -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BG_CARD}">
                 <tr>
-                  <td bgcolor="${BG_CARD}" style="padding:40px 40px 36px 40px;background-color:${BG_CARD} !important;">
-
-                    <!-- Large logo inside the card (replaces the old bell icon).
-                         The td itself is explicitly dark so the logo's white
-                         text stays visible even in light-mode clients. -->
-                    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 28px auto;">
-                      <tr>
-                        <td bgcolor="${BG_CARD}" align="center" style="background-color:${BG_CARD} !important;padding:4px;">
-                          <img
-                            src="${LOGO_URL}"
-                            alt="Chainviax"
-                            width="200"
-                            height="55"
-                            style="display:block;border:0;width:200px;height:55px;outline:none;-ms-interpolation-mode:bicubic;"
-                          />
-                        </td>
-                      </tr>
-                    </table>
+                  <td bgcolor="${BG_CARD}" style="padding:40px 34px 36px 34px;background-color:${BG_CARD} !important;">
 
                     <!-- Heading -->
                     <h1 style="
-                      margin:0 0 8px 0;
-                      font-size:22px;
+                      margin:0 0 12px 0;
+                      font-size:26px;
                       font-weight:700;
                       color:${TEXT_WHITE} !important;
                       text-align:center;
-                      letter-spacing:-0.3px;
+                      letter-spacing:-0.5px;
+                      line-height:1.2;
                     ">${heading}</h1>
 
-                    <!-- Greeting -->
-                    <p style="
-                      margin:0 0 20px 0;
-                      font-size:15px;
-                      color:${TEXT_MUTED} !important;
-                      text-align:center;
-                    ">Hi ${name},</p>
-
-                    <!-- Divider -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
-                      <tr>
-                        <td bgcolor="${BORDER}" style="height:1px;line-height:1px;font-size:0;background-color:${BORDER} !important;">&nbsp;</td>
-                      </tr>
-                    </table>
-
-                    <!-- Message paragraphs -->
-                    ${paragraphs}
+                    <!-- Greeting is included in the body paragraphs for
+                         tighter spacing — the caller prepends "Hi Name," when
+                         appropriate. If no body is sent, fall back to a simple
+                         greeting. -->
+                    ${paragraphs || `<p style="margin:0 0 24px 0;font-size:14.5px;line-height:1.65;color:${TEXT_MUTED} !important;text-align:center;">Hi ${name},</p>`}
 
                     ${cardBlock}
 
@@ -337,49 +287,52 @@ function buildNotificationEmail(opts: {
                 </tr>
               </table>
 
-            </td>
-          </tr>
-
-          <!-- ─── FOOTER ──────────────────────────────────────────────── -->
-          <tr>
-            <td bgcolor="${BG_PAGE}" style="padding:28px 0 8px 0;background-color:${BG_PAGE} !important;" align="center">
-
-              <!-- Footer divider -->
-              <table width="80%" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px auto;">
+              <!-- Footer inside card: automated message + copyright -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td bgcolor="${BORDER}" style="height:1px;line-height:1px;font-size:0;background-color:${BORDER} !important;">&nbsp;</td>
+                  <td align="center" style="padding:6px 34px 24px 34px;">
+                    <p style="
+                      margin:0 0 4px 0;
+                      font-size:12px;
+                      color:${TEXT_DIM} !important;
+                      text-align:center;
+                    ">This is an automated message. Do not reply.</p>
+                    <p style="
+                      margin:0;
+                      font-size:11.5px;
+                      color:${TEXT_DIM} !important;
+                      text-align:center;
+                    ">&copy; ${new Date().getFullYear()} Chainviax. All rights reserved.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 34px;">
+                    <div style="height:1px;background:rgba(255,255,255,0.05);"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:14px 34px 26px 34px;">
+                    <span style="font-size:10.5px;font-weight:600;letter-spacing:0.12em;color:${GOLD};margin-right:14px;">
+                      &#128274; TLS Secured
+                    </span>
+                    <span style="font-size:10.5px;font-weight:600;letter-spacing:0.12em;color:${GOLD};">
+                      &#10003; KYC Verified
+                    </span>
+                  </td>
                 </tr>
               </table>
 
-              <p style="
-                margin:0 0 8px 0;
-                font-size:12px;
-                color:${TEXT_MUTED} !important;
-                text-align:center;
-                line-height:1.6;
-              ">
-                This is an automated message. Please do not reply to this email.
-              </p>
-
-              <p style="
-                margin:0;
-                font-size:11px;
-                color:${TEXT_MUTED} !important;
-                text-align:center;
-              ">
-                &copy; ${new Date().getFullYear()} Chainviax. All rights reserved.
-              </p>
-
             </td>
           </tr>
 
+          <!-- Extra outside-card breathing room -->
+          <tr><td style="height:24px;line-height:24px;font-size:0;">&nbsp;</td></tr>
+
         </table>
-        <!-- /Container card -->
 
       </td>
     </tr>
   </table>
-  <!-- /Email wrapper -->
 
 </body>
 </html>
