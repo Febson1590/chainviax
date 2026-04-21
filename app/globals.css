@@ -277,6 +277,96 @@
   background-clip: text;
 }
 
+/* ═══ Chainviax landing (premium broker) tokens ═══════════════════════ */
+.chainviax-gold-text {
+  background: linear-gradient(135deg, #fff3c4 0%, #f4c440 42%, #e0a72a 85%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 8px rgba(244, 196, 64, 0.25));
+}
+
+.chainviax-btn-gold {
+  color: #1b1205;
+  background: linear-gradient(180deg, #ffe08a 0%, #f4c440 45%, #d29a1a 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 -1px 0 rgba(139, 101, 8, 0.55) inset,
+    0 12px 32px rgba(244, 196, 64, 0.35),
+    0 2px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 232, 150, 0.6);
+  transition: filter .18s ease, transform .12s ease, box-shadow .18s ease;
+}
+.chainviax-btn-gold:hover  { filter: brightness(1.07); box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 -1px 0 rgba(139,101,8,0.55) inset, 0 16px 40px rgba(244,196,64,0.45); }
+.chainviax-btn-gold:active { transform: translateY(1px); }
+
+.chainviax-btn-outline {
+  color: #f7e8b5;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(244, 196, 64, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.chainviax-btn-outline:hover {
+  background: rgba(244, 196, 64, 0.08);
+  border-color: rgba(244, 196, 64, 0.55);
+  color: #fff3c4;
+}
+
+.chainviax-btn-outline-dark {
+  color: #e9e4d6;
+  background: rgba(8, 10, 16, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background .18s ease, border-color .18s ease;
+}
+.chainviax-btn-outline-dark:hover {
+  background: rgba(244, 196, 64, 0.08);
+  border-color: rgba(244, 196, 64, 0.35);
+}
+
+.chainviax-band {
+  background: linear-gradient(180deg, rgba(10, 12, 20, 0.88) 0%, rgba(6, 8, 14, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+.chainviax-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(80% 60% at 100% 0%, rgba(244, 196, 64, 0.10), transparent 55%);
+  pointer-events: none;
+}
+
+.chainviax-chart-card {
+  background: linear-gradient(180deg, rgba(12, 14, 22, 0.92) 0%, rgba(5, 7, 12, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 60px rgba(244, 196, 64, 0.08);
+  overflow: hidden;
+}
+
+.chainviax-coin-card {
+  background: linear-gradient(180deg, rgba(16, 18, 26, 0.9) 0%, rgba(8, 10, 16, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.chainviax-coin-card:hover {
+  border-color: rgba(244, 196, 64, 0.3);
+  transform: translateY(-2px);
+}
+
 /* ─── Backgrounds ────────────────────────────────── */
 .hero-bg {
   background:

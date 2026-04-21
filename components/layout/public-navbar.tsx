@@ -8,11 +8,11 @@ import { Menu, X, ChevronRight, Globe } from "lucide-react";
 import { LanguageMenuDialog } from "@/components/language-switcher";
 
 const navLinks = [
-  { href: "/markets",         label: "Markets"  },
-  { href: "/#trade-terminal", label: "Trade"    },
-  { href: "/pricing",         label: "Pricing"  },
-  { href: "/security",        label: "Security" },
-  { href: "/help",            label: "Support"  },
+  { href: "/markets",  label: "Markets"  },
+  { href: "/markets",  label: "Trading"  },
+  { href: "/pricing",  label: "Earn"     },
+  { href: "/about",    label: "About"    },
+  { href: "/help",     label: "Support"  },
 ];
 
 export function PublicNavbar() {
@@ -47,7 +47,7 @@ export function PublicNavbar() {
                 const active = pathname === link.href;
                 return (
                   <Link
-                    key={link.href}
+                    key={link.label}
                     href={link.href}
                     className={cn(
                       "relative px-3 h-9 inline-flex items-center text-[13px] font-medium rounded-md transition-colors duration-200",
@@ -112,7 +112,7 @@ export function PublicNavbar() {
               const active = pathname === link.href;
               return (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
