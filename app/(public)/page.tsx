@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
-  ArrowRight, ShieldCheck, Zap, User, Home, LineChart,
+  ArrowRight, ShieldCheck, Zap, LineChart,
   Wallet, UserPlus, BadgeCheck,
 } from "lucide-react";
 import { getMarketAssets, type MarketAsset } from "@/lib/coingecko";
@@ -29,7 +28,6 @@ export default async function HomePage() {
       <HowItWorks />
       <TrustStrip totalVolume={totalVolume} />
       <ClosingCTA />
-      <MobileTabBar />
     </div>
   );
 }
@@ -51,8 +49,6 @@ function AmbientGlow() {
 
 function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
   const price  = btc?.price ?? 43582.21;
-  const change = btc?.change ?? 2.34;
-  const isUp   = change >= 0;
   const high24 = price * 1.018;
   const low24  = price * 0.986;
 
@@ -62,22 +58,22 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
         {/* left */}
         <div className="relative max-w-2xl">
           <div className="chainviax-eyebrow inline-flex items-center gap-2 mb-9">
-            <span className="chainviax-dot" /> Trusted Crypto Broker
+            <span className="chainviax-dot" /> Crypto Broker You Can Trust
           </div>
           <h1 className="font-bold tracking-[-0.025em] text-[60px] sm:text-[80px] lg:text-[104px] leading-[0.92]">
-            <span className="block text-white">Your Premium</span>
-            <span className="block chainviax-gold-text">Crypto Broker.</span>
+            <span className="block text-white">Buy and Sell</span>
+            <span className="block chainviax-gold-text">Crypto Easily.</span>
           </h1>
           <p className="mt-8 text-[17px] sm:text-[18px] text-slate-300/90 leading-[1.55] max-w-lg">
-            Buy, sell, and hold Bitcoin, Ethereum, and the top cryptocurrencies.
-            <span className="block mt-1 text-slate-400/80 text-[15px]">Safe, simple, and fast.</span>
+            Trade Bitcoin, Ethereum, and 90+ coins in one place.
+            <span className="block mt-1 text-slate-400/80 text-[15px]">Simple. Fast. Safe.</span>
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
             <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[56px] px-10 rounded-[10px] text-[14px] font-bold tracking-wide">
-              Create Account <ArrowRight className="h-4 w-4" />
+              Start Trading <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/markets" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
-              View Markets
+              View Prices
             </Link>
           </div>
           {/* Inline trust row with divider */}
@@ -90,14 +86,14 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
           </div>
         </div>
 
-        {/* right — cinematic trading panel */}
-        <div className="relative w-full min-h-[520px] lg:min-h-[620px]">
-          {/* BIG ambient gold glow behind panel */}
-          <div aria-hidden className="absolute inset-8 -z-10 blur-[120px] opacity-70"
-               style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(244,196,64,0.30), transparent 70%)" }} />
+        {/* right — clean trading panel, no decorative coins */}
+        <div className="relative w-full">
+          {/* soft ambient gold glow behind panel */}
+          <div aria-hidden className="absolute -inset-6 -z-10 blur-[100px] opacity-60"
+               style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(244,196,64,0.22), transparent 70%)" }} />
 
           {/* main trading card */}
-          <div className="absolute bottom-0 right-0 w-full md:w-[94%] lg:w-[98%] chainviax-card-elite overflow-hidden">
+          <div className="relative w-full chainviax-card-elite overflow-hidden">
             {/* window chrome */}
             <div className="flex items-center justify-between px-6 h-12 border-b border-white/[0.06] bg-black/30">
               <div className="flex items-center gap-1.5">
@@ -155,27 +151,6 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
             </div>
           </div>
 
-          {/* Floating mini-stat: BTC price chip (top-right) */}
-          <div className="absolute right-2 top-2 hidden md:flex chainviax-mini-chip items-center gap-3 px-4 py-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-[18px] font-black text-white"
-                 style={{ background: "linear-gradient(145deg,#f7931a,#c56a00)", boxShadow: "0 6px 18px rgba(247,147,26,0.5)" }}>₿</div>
-            <div>
-              <div className="text-[9px] uppercase tracking-[0.25em] text-slate-500 font-bold">BTC / USD</div>
-              <div className="text-[14px] font-bold text-white tabular-nums">{formatCurrency(price)}</div>
-            </div>
-            <div className={`pl-3 border-l border-white/10 ${isUp ? "text-emerald-400" : "text-red-400"} text-[11px] font-bold tabular-nums`}>
-              {isUp ? "+" : "−"}{Math.abs(change).toFixed(2)}%
-            </div>
-          </div>
-
-          {/* BTC coin */}
-          <div className="absolute left-[2%] sm:left-[4%] -top-2 sm:top-[-10px] w-[36%] sm:w-[30%] lg:w-[32%] max-w-[230px] drop-shadow-[0_50px_90px_rgba(247,147,26,0.4)]">
-            <Image src="/landing/btc-coin.png" alt="Bitcoin" width={520} height={520} priority className="w-full h-auto select-none" />
-          </div>
-          {/* Chainviax coin */}
-          <div className="absolute right-[6%] sm:right-[10%] top-[16%] w-[36%] sm:w-[28%] lg:w-[30%] max-w-[220px] drop-shadow-[0_50px_90px_rgba(244,196,64,0.5)]">
-            <Image src="/landing/chainviax-coin.png" alt="Chainviax" width={520} height={520} priority className="w-full h-auto select-none" />
-          </div>
         </div>
       </div>
     </section>
@@ -249,9 +224,9 @@ function MarketsSection({ initial }: { initial: MarketAsset[] }) {
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-20 md:py-24">
       <div className="max-w-[1280px] mx-auto">
         <SectionHeading
-          eyebrow="Top Coins"
-          headingLead="Popular coins,"
-          headingGold="one tap away."
+          eyebrow="Live Prices"
+          headingLead="Buy and sell crypto"
+          headingGold="in seconds."
           rightLink={{ href: "/markets", label: "View all" }}
         />
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
@@ -281,9 +256,9 @@ function TerminalSection({ btc }: { btc?: MarketAsset }) {
       <div className="max-w-[1280px] mx-auto">
         <SectionHeading
           eyebrow="Trading"
-          headingLead="A real trading terminal,"
-          headingGold="built in."
-          rightText="Live prices · Real order book · Fast trades"
+          headingLead="Real charts."
+          headingGold="Real prices."
+          rightText="Live prices · Real orders · Fast trades"
         />
         <div className="mt-10 chainviax-card-elite overflow-hidden">
           <div className="flex items-center justify-between px-6 h-12 border-b border-white/[0.06] bg-black/30">
@@ -393,14 +368,14 @@ function Field({ label, value, accent }: { label: string; value: string; accent?
 
 function WhySection() {
   const items = [
-    { icon: Zap,         n: "01", title: "Fair Prices",         desc: "Buy and sell at live market rates. No hidden markups, no surprise spreads." },
-    { icon: ShieldCheck, n: "02", title: "Your Crypto is Safe", desc: "Most funds are kept offline in cold storage and monitored around the clock." },
-    { icon: LineChart,   n: "03", title: "Easy to Use",         desc: "Clean charts, simple orders, and a dashboard anyone can follow from day one." },
+    { icon: Zap,         n: "01", title: "Fair Prices",   desc: "You pay the real market price. No hidden fees." },
+    { icon: ShieldCheck, n: "02", title: "Safe Storage",  desc: "Your crypto is kept offline and watched 24/7." },
+    { icon: LineChart,   n: "03", title: "Simple Trading", desc: "Clean charts and one-tap orders anyone can use." },
   ];
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
       <div className="max-w-[1320px] mx-auto">
-        <SectionHeading eyebrow="Why Chainviax" headingLead="Built to make" headingGold="trading simple." />
+        <SectionHeading eyebrow="Why Chainviax" headingLead="Made for" headingGold="real people." />
         <div className="mt-14 grid grid-cols-1 md:grid-cols-3 relative">
           {/* top + bottom hairlines */}
           <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/25 to-transparent" />
@@ -433,14 +408,14 @@ function WhySection() {
 
 function HowItWorks() {
   const steps = [
-    { n: "01", icon: UserPlus,   title: "Sign Up",         desc: "Create your free account with just an email. Under a minute." },
-    { n: "02", icon: BadgeCheck, title: "Verify Your ID",  desc: "Upload a photo of your ID. Most checks are approved the same day." },
-    { n: "03", icon: Wallet,     title: "Fund & Trade",    desc: "Add money, pick a coin, and start trading with a single tap." },
+    { n: "01", icon: UserPlus,   title: "Sign Up",       desc: "Use your email to open a free account." },
+    { n: "02", icon: BadgeCheck, title: "Verify ID",     desc: "Send us a photo of your ID. Most are approved today." },
+    { n: "03", icon: Wallet,     title: "Add & Trade",   desc: "Add money and buy your first coin in one tap." },
   ];
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
       <div className="max-w-[1320px] mx-auto">
-        <SectionHeading eyebrow="Getting Started" headingLead="Start trading in" headingGold="three steps." />
+        <SectionHeading eyebrow="Get Started" headingLead="Start trading" headingGold="in 3 steps." />
         <div className="mt-14 relative">
           {/* continuous dashed gold path */}
           <div aria-hidden className="hidden md:block absolute top-9 left-[10%] right-[10%] h-px"
@@ -474,9 +449,9 @@ function HowItWorks() {
 function TrustStrip({ totalVolume }: { totalVolume: number }) {
   const items = [
     { big: `$${formatCompact(totalVolume || 8_755_342_108)}`, small: "Traded Today" },
-    { big: "98+",    small: "Coins Listed" },
-    { big: "0.05%",  small: "Fees Start At" },
-    { big: "250K+",  small: "Active Users" },
+    { big: "98+",    small: "Coins to Trade" },
+    { big: "0.05%",  small: "Low Fees" },
+    { big: "250K+",  small: "Happy Users" },
   ];
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-12 md:py-16">
@@ -514,14 +489,14 @@ function ClosingCTA() {
                style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(244,196,64,0.18), transparent 70%)" }} />
           <div className="relative">
             <div className="inline-flex items-center gap-2 chainviax-eyebrow mb-6">
-              <span className="chainviax-dot" /> Ready to start?
+              <span className="chainviax-dot" /> Ready?
             </div>
             <h2 className="text-[34px] sm:text-[44px] lg:text-[54px] font-bold tracking-[-0.02em] leading-[1.04]">
-              <span className="text-white">Start trading </span>
-              <span className="chainviax-gold-text">in minutes.</span>
+              <span className="text-white">Your first trade </span>
+              <span className="chainviax-gold-text">starts here.</span>
             </h2>
             <p className="mt-5 text-[15px] text-slate-400 max-w-lg mx-auto leading-relaxed">
-              Create a free account and start buying crypto today. It only takes a few minutes.
+              Open an account in minutes. Buy your first coin today.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3">
               <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[54px] px-9 rounded-[10px] text-[14px] font-bold tracking-wide">
@@ -534,9 +509,9 @@ function ClosingCTA() {
             <div className="mt-7 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold">
               <span>Free to join</span>
               <span className="h-1 w-1 rounded-full bg-amber-500/60" />
-              <span>Quick ID check</span>
+              <span>Fast ID check</span>
               <span className="h-1 w-1 rounded-full bg-amber-500/60" />
-              <span>Trade the same day</span>
+              <span>Trade today</span>
             </div>
           </div>
         </div>
@@ -580,32 +555,5 @@ function SectionHeading({
   );
 }
 
-/* ═══ Mobile tab bar ═══════════════════════════════════════════════════ */
-
-function MobileTabBar() {
-  return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t border-white/[0.08]"
-         style={{
-           background: "linear-gradient(180deg, rgba(5,8,14,0.98) 0%, rgba(3,5,9,0.98) 100%)",
-           backdropFilter: "blur(24px)",
-           WebkitBackdropFilter: "blur(24px)",
-         }}>
-      <div className="grid grid-cols-3 h-full">
-        <Link href="/markets" className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-amber-300">
-          <Home className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Markets</span>
-        </Link>
-        <Link href="/markets" className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-amber-300">
-          <LineChart className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Trade</span>
-        </Link>
-        <Link href="/login" className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-amber-300">
-          <User className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Profile</span>
-        </Link>
-      </div>
-    </nav>
-  );
-}
 
 
