@@ -1,0 +1,29 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cx-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="45%" stop-color="#f4c440"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient>
+    <linearGradient id="cx-gold-edge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff3c4"/>
+      <stop offset="100%" stop-color="#8b6508"/>
+    </linearGradient>
+    <filter id="cx-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="0.7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#cx-soft)" transform="translate(32 32)">
+    <!-- Upper-left link -->
+    <g transform="rotate(-28) translate(-8 -10)">
+      <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cx-gold)" stroke-width="5.5"/>
+      <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cx-gold-edge)" stroke-width="1" opacity="0.6"/>
+    </g>
+    <!-- Lower-right link interlocked -->
+    <g transform="rotate(-28) translate(8 10)">
+      <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cx-gold)" stroke-width="5.5"/>
+      <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cx-gold-edge)" stroke-width="1" opacity="0.6"/>
+    </g>
+  </g>
+</svg>

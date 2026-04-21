@@ -1,0 +1,731 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  Loader2, TrendingUp, Plus, PauseCircle, PlayCircle,
+  XCircle, ChevronDown, Pencil, DollarSign, ToggleLeft, ToggleRight,
+  Trash2,
+} from "lucide-react";
+import {
+  adminAssignInvestment, adminEditInvestment, adminAddFundsToInvestment,
+  adminToggleInvestment, adminCancelInvestment, adminGetAllInvestments,
+  adminGetAllUsers, adminGetInvestmentPlans, adminCreatePlan, adminUpdatePlan,
+  adminDeletePlan,
+} from "@/lib/actions/investment";
+
+interface UserInvestment {
+  id: string; userId: string; planName: string; amount: number; totalEarned: number;
+  minProfit: number; maxProfit: number; profitInterval: number; maxInterval: number;
+  status: string; startedAt: string; user: { name: string | null; email: string };
+}
+interface Plan {
+  id: string; name: string; description: string | null;
+  minAmount: number; maxAmount: number | null;
+  minProfit: number; maxProfit: number;
+  minDurationHours: number | null; maxDurationHours: number | null;
+  profitInterval: number; maxInterval: number;
+  minLossRatio: number; maxLossRatio: number;
+  minLoss: number; maxLoss: number;
+  isActive: boolean; isPopular: boolean;
+  _count: { userInvestments: number };
+}
+interface UserOption { id: string; name: string | null; email: string }
+
+function fmt(n: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+}
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE:    "bg-emerald-500/10 border-emerald-500/25 text-emerald-400",
+  PAUSED:    "bg-yellow-500/10 border-yellow-500/25 text-yellow-400",
+  COMPLETED: "bg-sky-500/10 border-sky-500/25 text-sky-400",
+  CANCELLED: "bg-red-500/10 border-red-500/25 text-red-400",
+};
+const inputCls = "w-full bg-white/[0.06] border border-white/[0.15] rounded-lg px-3 py-2 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-sky-500/60";
+const labelCls = "text-xs font-medium text-slate-400 uppercase tracking-wider";
+
+// ── Plan Modal ────────────────────────────────────────────────────────────────
+function PlanModal({ plan, onClose, onSuccess }: { plan?: Plan; onClose: () => void; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    name:             plan?.name ?? "",
+    description:      plan?.description ?? "",
+    minAmount:        String(plan?.minAmount ?? 100),
+    maxAmount:        plan?.maxAmount !== null && plan?.maxAmount !== undefined ? String(plan.maxAmount) : "",
+    minProfit:        String(plan?.minProfit ?? 0.5),
+    maxProfit:        String(plan?.maxProfit ?? 1.5),
+    minDurationHours: plan?.minDurationHours !== null && plan?.minDurationHours !== undefined ? String(plan.minDurationHours) : "",
+    maxDurationHours: plan?.maxDurationHours !== null && plan?.maxDurationHours !== undefined ? String(plan.maxDurationHours) : "",
+    minLossRatio:     String(plan?.minLossRatio ?? 0),
+    maxLossRatio:     String(plan?.maxLossRatio ?? 0),
+    minLoss:          String(plan?.minLoss ?? 0),
+    maxLoss:          String(plan?.maxLoss ?? 0),
+    isPopular:        plan?.isPopular ?? false,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  function set(k: keyof typeof form, v: string | boolean) {
+    setForm(f => ({ ...f, [k]: v }));
+    setErrors(e => { const { [k]: _drop, ...rest } = e; return rest; });
+  }
+
+  /** Numeric range check helpers — shared inline validator. */
+  function validate(): { ok: boolean; errs: Record<string, string> } {
+    const errs: Record<string, string> = {};
+    const nonNeg = (s: string) => parseFloat(s) >= 0;
+    const pct01_100 = (s: string) => {
+      const n = parseFloat(s);
+      return !Number.isNaN(n) && n >= 0 && n <= 100;
+    };
+
+    if (!form.name.trim()) errs.name = "Plan name is required";
+
+    if (!nonNeg(form.minAmount)) errs.minAmount = "Must be 0 or more";
+    if (form.maxAmount.trim() && !nonNeg(form.maxAmount)) errs.maxAmount = "Must be 0 or more";
+    if (form.maxAmount.trim() && parseFloat(form.maxAmount) < parseFloat(form.minAmount))
+      errs.maxAmount = "Max must be ≥ min amount";
+
+    if (!nonNeg(form.minProfit)) errs.minProfit = "Must be 0 or more";
+    if (!nonNeg(form.maxProfit)) errs.maxProfit = "Must be 0 or more";
+    if (parseFloat(form.maxProfit) < parseFloat(form.minProfit))
+      errs.maxProfit = "Max must be ≥ min profit";
+
+    // Duration is REQUIRED — it drives the tick scheduler.
+    if (!form.minDurationHours.trim()) errs.minDurationHours = "Required (hours)";
+    else if (parseFloat(form.minDurationHours) <= 0)
+      errs.minDurationHours = "Must be greater than 0";
+    if (!form.maxDurationHours.trim()) errs.maxDurationHours = "Required (hours)";
+    else if (parseFloat(form.maxDurationHours) <= 0)
+      errs.maxDurationHours = "Must be greater than 0";
+    if (!errs.minDurationHours && !errs.maxDurationHours &&
+        parseFloat(form.maxDurationHours) < parseFloat(form.minDurationHours))
+      errs.maxDurationHours = "Max must be ≥ min duration";
+
+    if (!pct01_100(form.minLossRatio)) errs.minLossRatio = "Must be between 0 and 100";
+    if (!pct01_100(form.maxLossRatio)) errs.maxLossRatio = "Must be between 0 and 100";
+    if (!errs.minLossRatio && !errs.maxLossRatio &&
+        parseFloat(form.maxLossRatio) < parseFloat(form.minLossRatio))
+      errs.maxLossRatio = "Max must be ≥ min loss ratio";
+
+    if (!nonNeg(form.minLoss)) errs.minLoss = "Must be 0 or more";
+    if (!nonNeg(form.maxLoss)) errs.maxLoss = "Must be 0 or more";
+    if (parseFloat(form.maxLoss) < parseFloat(form.minLoss))
+      errs.maxLoss = "Max must be ≥ min loss";
+
+    return { ok: Object.keys(errs).length === 0, errs };
+  }
+
+  async function submit() {
+    const { ok, errs } = validate();
+    setErrors(errs);
+    if (!ok) { toast.error("Please fix the highlighted fields"); return; }
+
+    setLoading(true);
+    const payload = {
+      name:             form.name.trim(),
+      description:      form.description || undefined,
+      minAmount:        parseFloat(form.minAmount),
+      maxAmount:        form.maxAmount.trim() ? parseFloat(form.maxAmount) : null,
+      minProfit:        parseFloat(form.minProfit),
+      maxProfit:        parseFloat(form.maxProfit),
+      minDurationHours: form.minDurationHours.trim() ? parseInt(form.minDurationHours) : null,
+      maxDurationHours: form.maxDurationHours.trim() ? parseInt(form.maxDurationHours) : null,
+      // Cadence fields are defaulted server-side (unused by the new hour-based engine).
+      profitInterval:   60,
+      maxInterval:      60,
+      minLossRatio:     parseFloat(form.minLossRatio) || 0,
+      maxLossRatio:     parseFloat(form.maxLossRatio) || 0,
+      minLoss:          parseFloat(form.minLoss)      || 0,
+      maxLoss:          parseFloat(form.maxLoss)      || 0,
+      isPopular:        form.isPopular,
+    };
+    const r = plan ? await adminUpdatePlan(plan.id, payload) : await adminCreatePlan(payload);
+    setLoading(false);
+    if (r.error) { toast.error(r.error); return; }
+    toast.success(plan ? "Plan updated!" : "Plan created!");
+    onSuccess(); onClose();
+  }
+
+  /** Inline field error renderer. */
+  const err = (key: string) =>
+    errors[key] ? (
+      <p className="text-[11px] text-red-400 mt-1">{errors[key]}</p>
+    ) : null;
+
+  // Mobile-scroll-safe shell:
+  //   - outer: fixed full-screen, scrolls vertically (`overflow-y-auto`),
+  //            aligns top on mobile, centers on sm+ ⇒ tall forms reachable.
+  //   - inner: uses `my-4 sm:my-auto` for breathing room while scrolling.
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center bg-black/70 backdrop-blur-sm overflow-y-auto p-4"
+      onClick={onClose}
+    >
+      <div
+        className="glass-card border border-sky-500/20 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl my-4 sm:my-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <h3 className="text-base font-bold text-white mb-5">
+          {plan ? "Edit Plan" : "Create Investment Plan"}
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className={labelCls}>Plan Name</label>
+            <input className={inputCls + " mt-1"} value={form.name}
+              onChange={e => set("name", e.target.value)} placeholder="e.g. Growth Plan" />
+            {err("name")}
+          </div>
+          <div>
+            <label className={labelCls}>Description (optional)</label>
+            <input className={inputCls + " mt-1"} value={form.description}
+              onChange={e => set("description", e.target.value)} placeholder="Short description…" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Min Amount (USD)</label>
+              <input type="number" min={0} className={inputCls + " mt-1"}
+                value={form.minAmount} onChange={e => set("minAmount", e.target.value)} />
+              {err("minAmount")}
+            </div>
+            <div>
+              <label className={labelCls}>Max Amount (USD) <span className="text-slate-600">— optional</span></label>
+              <input type="number" min={0} className={inputCls + " mt-1"}
+                value={form.maxAmount} onChange={e => set("maxAmount", e.target.value)}
+                placeholder="Leave empty for no cap" />
+              {err("maxAmount")}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Min Profit (%)</label>
+              <input type="number" step="0.01" min={0} className={inputCls + " mt-1"}
+                value={form.minProfit} onChange={e => set("minProfit", e.target.value)} />
+              {err("minProfit")}
+            </div>
+            <div>
+              <label className={labelCls}>Max Profit (%)</label>
+              <input type="number" step="0.01" min={0} className={inputCls + " mt-1"}
+                value={form.maxProfit} onChange={e => set("maxProfit", e.target.value)} />
+              {err("maxProfit")}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Min Duration (hours)</label>
+              <input type="number" min={0} className={inputCls + " mt-1"}
+                value={form.minDurationHours} onChange={e => set("minDurationHours", e.target.value)}
+                placeholder="e.g. 30" />
+              {err("minDurationHours")}
+            </div>
+            <div>
+              <label className={labelCls}>Max Duration (hours)</label>
+              <input type="number" min={0} className={inputCls + " mt-1"}
+                value={form.maxDurationHours} onChange={e => set("maxDurationHours", e.target.value)}
+                placeholder="e.g. 50" />
+              {err("maxDurationHours")}
+            </div>
+          </div>
+          <p className="text-[11px] text-slate-500 -mt-2">
+            The engine picks a random wait between min and max duration before the next tick.
+          </p>
+
+          {/* Loss simulation — fewer losses, more profits */}
+          <div className="pt-4 mt-1 border-t border-white/[0.06]">
+            <div className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider mb-2">
+              Loss simulation
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Min Loss Ratio (%)</label>
+                <input type="number" step="0.01" min={0} max={100} className={inputCls + " mt-1"}
+                  value={form.minLossRatio} onChange={e => set("minLossRatio", e.target.value)}
+                  placeholder="e.g. 8" />
+                {err("minLossRatio")}
+              </div>
+              <div>
+                <label className={labelCls}>Max Loss Ratio (%)</label>
+                <input type="number" step="0.01" min={0} max={100} className={inputCls + " mt-1"}
+                  value={form.maxLossRatio} onChange={e => set("maxLossRatio", e.target.value)}
+                  placeholder="e.g. 12" />
+                {err("maxLossRatio")}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className={labelCls}>Min Loss (%)</label>
+                <input type="number" step="0.01" min={0} className={inputCls + " mt-1"}
+                  value={form.minLoss} onChange={e => set("minLoss", e.target.value)}
+                  placeholder="e.g. 0.10" />
+                {err("minLoss")}
+              </div>
+              <div>
+                <label className={labelCls}>Max Loss (%)</label>
+                <input type="number" step="0.01" min={0} className={inputCls + " mt-1"}
+                  value={form.maxLoss} onChange={e => set("maxLoss", e.target.value)}
+                  placeholder="e.g. 0.30" />
+                {err("maxLoss")}
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+              Each tick the engine picks a random loss-ratio in [<span className="text-amber-400 font-semibold">Min</span>,{" "}
+              <span className="text-amber-400 font-semibold">Max</span>]% and rolls it as the probability of a loss.
+              Keep Max below 50 so profits outnumber losses. Loss magnitude is a random % between Min Loss and Max Loss,
+              applied to the invested amount. Back-to-back losses are capped at 2 in a row.
+            </p>
+          </div>
+
+          {/* Most Popular toggle */}
+          <label className="flex items-center gap-2 cursor-pointer mt-2">
+            <input
+              type="checkbox"
+              checked={form.isPopular}
+              onChange={(e) => set("isPopular", e.target.checked)}
+              className="w-4 h-4 rounded border-white/20 bg-white/5 text-sky-500 focus:ring-sky-500 focus:ring-offset-0"
+            />
+            <span className="text-xs text-slate-300">
+              Mark as <strong className="text-sky-400">Most Popular</strong>{" "}
+              <span className="text-slate-500">(only one plan can hold this badge)</span>
+            </span>
+          </label>
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <Button variant="outline" className="flex-1 border-white/10 text-slate-300 hover:text-white" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1 bg-sky-500 hover:bg-sky-400 text-white font-semibold" onClick={submit} disabled={loading}>
+            {loading ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
+            {plan ? "Save" : "Create"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Investment Modal (assign / edit user investment) ──────────────────────────
+function InvestmentModal({ users, investment, isEdit, onClose, onSuccess }: {
+  users: UserOption[]; investment?: UserInvestment; isEdit: boolean;
+  onClose: () => void; onSuccess: () => void;
+}) {
+  const [form, setForm] = useState({
+    userId: investment?.userId ?? "", planName: investment?.planName ?? "Growth Plan",
+    amount: String(investment?.amount ?? ""),
+    minProfit: String(investment?.minProfit ?? 0.5), maxProfit: String(investment?.maxProfit ?? 1.5),
+    profitInterval: String(investment?.profitInterval ?? 60),
+    maxInterval: String(investment?.maxInterval ?? 60),
+  });
+  const [loading, setLoading] = useState(false);
+  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+
+  async function submit() {
+    if (!isEdit && !form.userId) { toast.error("Select a user"); return; }
+    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    setLoading(true);
+    if (isEdit && investment) {
+      const r = await adminEditInvestment(investment.userId, {
+        planName: form.planName, amount: parseFloat(form.amount),
+        minProfit: parseFloat(form.minProfit), maxProfit: parseFloat(form.maxProfit),
+        profitInterval: parseInt(form.profitInterval), maxInterval: parseInt(form.maxInterval),
+      });
+      setLoading(false);
+      if (r.error) { toast.error(r.error); return; }
+      toast.success("Investment updated!");
+    } else {
+      const r = await adminAssignInvestment({
+        userId: form.userId, planName: form.planName, amount: parseFloat(form.amount),
+        minProfit: parseFloat(form.minProfit), maxProfit: parseFloat(form.maxProfit),
+        profitInterval: parseInt(form.profitInterval), maxInterval: parseInt(form.maxInterval),
+      });
+      setLoading(false);
+      if (r.error) { toast.error(r.error); return; }
+      toast.success("Investment assigned!");
+    }
+    onSuccess(); onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-center items-start sm:items-center overflow-y-auto p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass-card border border-sky-500/20 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-white mb-5">{isEdit ? "Edit Investment" : "Assign Investment"}</h3>
+        <div className="space-y-4">
+          {!isEdit && (
+            <div><label className={labelCls}>User</label>
+              <div className="relative mt-1">
+                <select value={form.userId} onChange={e => set("userId", e.target.value)} className={inputCls + " appearance-none pr-8"}>
+                  <option value="" className="bg-[#0d1e3a]">Select user…</option>
+                  {users.map(u => <option key={u.id} value={u.id} className="bg-[#0d1e3a]">{u.name || "—"} ({u.email})</option>)}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+          )}
+          {isEdit && investment && (
+            <div><label className={labelCls}>User</label>
+              <div className="mt-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm">
+                <span className="text-white font-medium">{investment.user.name || "—"}</span>
+                <span className="text-slate-500 ml-2">{investment.user.email}</span>
+              </div>
+            </div>
+          )}
+          <div><label className={labelCls}>Plan Name</label><input className={inputCls + " mt-1"} value={form.planName} onChange={e => set("planName", e.target.value)} /></div>
+          <div><label className={labelCls}>Amount (USD)</label><input type="number" className={inputCls + " mt-1"} value={form.amount} onChange={e => set("amount", e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Min Profit (%)</label><input type="number" step="0.01" className={inputCls + " mt-1"} value={form.minProfit} onChange={e => set("minProfit", e.target.value)} /></div>
+            <div><label className={labelCls}>Max Profit (%)</label><input type="number" step="0.01" className={inputCls + " mt-1"} value={form.maxProfit} onChange={e => set("maxProfit", e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Min Interval (s)</label><input type="number" className={inputCls + " mt-1"} value={form.profitInterval} onChange={e => set("profitInterval", e.target.value)} /></div>
+            <div><label className={labelCls}>Max Interval (s)</label><input type="number" className={inputCls + " mt-1"} value={form.maxInterval} onChange={e => set("maxInterval", e.target.value)} /></div>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-6">
+          <Button variant="outline" className="flex-1 border-white/10 text-slate-300 hover:text-white" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1 bg-sky-500 hover:bg-sky-400 text-white font-semibold" onClick={submit} disabled={loading}>
+            {loading ? <Loader2 size={14} className="animate-spin mr-1" /> : null}{isEdit ? "Save" : "Assign"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Add Funds Modal ───────────────────────────────────────────────────────────
+function AddFundsModal({ investment, onClose, onSuccess }: { investment: UserInvestment; onClose: () => void; onSuccess: () => void }) {
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  async function submit() {
+    const val = parseFloat(amount);
+    if (!val || val <= 0) { toast.error("Enter a valid amount"); return; }
+    setLoading(true);
+    const r = await adminAddFundsToInvestment(investment.userId, val);
+    setLoading(false);
+    if (r.error) { toast.error(r.error); return; }
+    toast.success(`${fmt(val)} added`); onSuccess(); onClose();
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex justify-center items-start sm:items-center overflow-y-auto p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass-card border border-sky-500/20 rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-white mb-1">Add Funds</h3>
+        <p className="text-xs text-slate-500 mb-4">No wallet deduction — directly adds to investment balance.</p>
+        <div className="mb-4 px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10">
+          <div className="text-sm text-white font-medium">{investment.user.name || "—"}</div>
+          <div className="text-xs text-slate-500">{investment.user.email} · <span className="text-sky-400">{investment.planName}</span></div>
+          <div className="text-xs text-slate-400 mt-0.5">Current: <span className="text-white font-semibold">{fmt(investment.amount)}</span></div>
+        </div>
+        <div className="mb-5"><label className={labelCls}>Amount (USD)</label>
+          <input type="number" className={inputCls + " mt-1"} value={amount} onChange={e => setAmount(e.target.value)} autoFocus />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1 border-white/10 text-slate-300 hover:text-white" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold" onClick={submit} disabled={loading}>
+            {loading ? <Loader2 size={14} className="animate-spin mr-1" /> : <DollarSign size={14} className="mr-1" />}Add Funds
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+export default function AdminInvestmentsPage() {
+  const [tab, setTab] = useState<"plans" | "users">("plans");
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [investments, setInvestments] = useState<UserInvestment[]>([]);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [editPlan, setEditPlan] = useState<Plan | null>(null);
+  const [showAssign, setShowAssign] = useState(false);
+  const [editInv, setEditInv] = useState<UserInvestment | null>(null);
+  const [fundsTarget, setFundsTarget] = useState<UserInvestment | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    const [plns, invs, usrs] = await Promise.all([
+      adminGetInvestmentPlans(), adminGetAllInvestments(), adminGetAllUsers(),
+    ]);
+    setPlans(plns.map((p: any) => ({
+      ...p,
+      minAmount:        Number(p.minAmount),
+      maxAmount:        p.maxAmount !== null && p.maxAmount !== undefined ? Number(p.maxAmount) : null,
+      minProfit:        Number(p.minProfit),
+      maxProfit:        Number(p.maxProfit),
+      minDurationHours: p.minDurationHours ?? null,
+      maxDurationHours: p.maxDurationHours ?? null,
+      minLossRatio:     Number(p.minLossRatio ?? 0),
+      maxLossRatio:     Number(p.maxLossRatio ?? 0),
+      minLoss:          Number(p.minLoss ?? 0),
+      maxLoss:          Number(p.maxLoss ?? 0),
+      maxInterval:      p.maxInterval ?? p.profitInterval,
+    })));
+    setInvestments(invs.map((i: any) => ({
+      ...i, amount: Number(i.amount), totalEarned: Number(i.totalEarned),
+      minProfit: Number(i.minProfit), maxProfit: Number(i.maxProfit),
+      maxInterval: i.maxInterval ?? i.profitInterval,
+      startedAt: new Date(i.startedAt).toISOString(),
+    })));
+    setUsers(usrs);
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function togglePlan(plan: Plan) {
+    setProcessing(plan.id);
+    const r = await adminUpdatePlan(plan.id, { isActive: !plan.isActive });
+    if (r.error) toast.error(r.error);
+    else { toast.success(plan.isActive ? "Plan deactivated" : "Plan activated"); load(); }
+    setProcessing(null);
+  }
+
+  async function deletePlan(plan: Plan) {
+    const inUse = plan._count.userInvestments;
+    const warning = inUse > 0
+      ? `Delete "${plan.name}"?\n\nThis plan is still referenced by ${inUse} user investment${inUse === 1 ? "" : "s"}. Those investments will be kept (with their name, amount and earnings preserved) but will no longer be linked to a plan definition. This cannot be undone.`
+      : `Delete "${plan.name}" permanently? This cannot be undone.`;
+    if (!confirm(warning)) return;
+    setProcessing(plan.id);
+    const r = await adminDeletePlan(plan.id);
+    if (r.error) toast.error(r.error);
+    else {
+      const d = (r as { detached?: number }).detached ?? 0;
+      toast.success(d > 0 ? `Plan deleted — ${d} user investment${d === 1 ? "" : "s"} detached` : "Plan deleted");
+      load();
+    }
+    setProcessing(null);
+  }
+
+  async function handleToggleInv(userId: string, current: string) {
+    setProcessing(userId);
+    const newStatus = current === "ACTIVE" ? "PAUSED" : "ACTIVE";
+    const r = await adminToggleInvestment(userId, newStatus as "ACTIVE" | "PAUSED");
+    if (r.error) toast.error(r.error);
+    else { toast.success(`Investment ${newStatus.toLowerCase()}`); load(); }
+    setProcessing(null);
+  }
+
+  async function handleCancelInv(userId: string) {
+    if (!confirm("Cancel this investment?")) return;
+    setProcessing(userId);
+    const r = await adminCancelInvestment(userId);
+    if (r.error) toast.error(r.error);
+    else { toast.success("Cancelled"); load(); }
+    setProcessing(null);
+  }
+
+  const activeInv = investments.filter(i => i.status === "ACTIVE").length;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <TrendingUp size={20} className="text-sky-400" /> Investments
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">Manage investment plans and user portfolios</p>
+        </div>
+        <div className="flex gap-2">
+          {tab === "plans" && (
+            <Button onClick={() => setShowCreatePlan(true)} className="bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm h-9 px-4">
+              <Plus size={14} className="mr-1.5" /> New Plan
+            </Button>
+          )}
+          {tab === "users" && (
+            <Button onClick={() => setShowAssign(true)} className="bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm h-9 px-4">
+              <Plus size={14} className="mr-1.5" /> Assign Investment
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: "Plans",         value: plans.length,                                                  color: "text-white" },
+          { label: "Active Plans",  value: plans.filter(p => p.isActive).length,                          color: "text-emerald-400" },
+          { label: "Active Invs",   value: activeInv,                                                     color: "text-sky-400" },
+          { label: "Total Earned",  value: fmt(investments.reduce((s, i) => s + i.totalEarned, 0)),       color: "text-emerald-400" },
+        ].map(s => (
+          <div key={s.label} className="glass-card rounded-xl p-4">
+            <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">{s.label}</div>
+            <div className={`text-lg font-bold ${s.color}`}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-1 border-b border-white/5">
+        {(["plans", "users"] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors capitalize ${tab === t ? "text-sky-400 border-b-2 border-sky-400" : "text-slate-500 hover:text-white"}`}>
+            {t === "plans" ? `Plans (${plans.length})` : `Users (${investments.length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Plans tab */}
+      {tab === "plans" && (
+        <div className="glass-card rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-white/5">
+            <span className="text-sm font-semibold text-white">{plans.length} Plan{plans.length !== 1 ? "s" : ""}</span>
+          </div>
+          {loading ? (
+            <div className="p-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin" /> Loading…
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 text-sm">No plans yet. Create one to get started.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full premium-table">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    {["Plan","Range","Profit Range","Duration","Users","Status","Actions"].map(h => (
+                      <th key={h} className="text-left text-xs font-medium text-slate-500 px-4 py-3 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {plans.map(plan => (
+                    <tr key={plan.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-sm font-bold text-white">{plan.name}</div>
+                          {plan.isPopular && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                              POPULAR
+                            </span>
+                          )}
+                        </div>
+                        {plan.description && <div className="text-xs text-slate-500 mt-0.5 max-w-[180px] truncate">{plan.description}</div>}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-white whitespace-nowrap">
+                        {fmt(plan.minAmount)}
+                        {plan.maxAmount !== null && <span className="text-slate-500"> – {fmt(plan.maxAmount)}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-emerald-400 whitespace-nowrap">{plan.minProfit}%–{plan.maxProfit}%</td>
+                      <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
+                        {plan.minDurationHours !== null && plan.maxDurationHours !== null
+                          ? `${plan.minDurationHours}–${plan.maxDurationHours} hours`
+                          : <span className="text-slate-600">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-white font-semibold">{plan._count.userInvestments}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${plan.isActive ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" : "bg-slate-500/10 border-slate-500/25 text-slate-400"}`}>
+                          {plan.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <Button size="sm" onClick={() => setEditPlan(plan)}
+                            className="h-7 px-2 text-xs bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20">
+                            <Pencil size={11} className="mr-1" />Edit
+                          </Button>
+                          <Button size="sm" disabled={processing === plan.id} onClick={() => togglePlan(plan)}
+                            className={`h-7 px-2 text-xs border ${plan.isActive ? "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/20" : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20"}`}>
+                            {processing === plan.id ? <Loader2 size={11} className="animate-spin" /> : plan.isActive ? <><ToggleLeft size={11} className="mr-1" />Disable</> : <><ToggleRight size={11} className="mr-1" />Enable</>}
+                          </Button>
+                          <Button size="sm" disabled={processing === plan.id}
+                            onClick={() => deletePlan(plan)}
+                            title={plan._count.userInvestments > 0
+                              ? `Delete — ${plan._count.userInvestments} user investment(s) will be detached`
+                              : "Delete plan"}
+                            className="h-7 px-2 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed">
+                            {processing === plan.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Users tab */}
+      {tab === "users" && (
+        <div className="glass-card rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-white/5">
+            <span className="text-sm font-semibold text-white">{investments.length} Investment{investments.length !== 1 ? "s" : ""}</span>
+          </div>
+          {loading ? (
+            <div className="p-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin" /> Loading…
+            </div>
+          ) : investments.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 text-sm">No investments yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full premium-table">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    {["User","Plan","Amount","Earned","Rate","Interval","Status","Actions"].map(h => (
+                      <th key={h} className="text-left text-xs font-medium text-slate-500 px-4 py-3 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {investments.map(inv => (
+                    <tr key={inv.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-white font-medium">{inv.user.name || "—"}</div>
+                        <div className="text-xs text-slate-500">{inv.user.email}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-300 font-medium">{inv.planName}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-white">{fmt(inv.amount)}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-emerald-400">{fmt(inv.totalEarned)}</td>
+                      <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{inv.minProfit}%–{inv.maxProfit}%</td>
+                      <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{inv.profitInterval}s–{inv.maxInterval}s</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[inv.status] || ""}`}>{inv.status}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {inv.status !== "CANCELLED" && (
+                            <Button size="sm" onClick={() => setEditInv(inv)}
+                              className="h-7 px-2 text-xs bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20">
+                              <Pencil size={11} className="mr-1" />Edit
+                            </Button>
+                          )}
+                          {(inv.status === "ACTIVE" || inv.status === "PAUSED") && (
+                            <Button size="sm" onClick={() => setFundsTarget(inv)}
+                              className="h-7 px-2 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
+                              <DollarSign size={11} className="mr-1" />Funds
+                            </Button>
+                          )}
+                          {(inv.status === "ACTIVE" || inv.status === "PAUSED") && (
+                            <Button size="sm" disabled={processing === inv.userId} onClick={() => handleToggleInv(inv.userId, inv.status)}
+                              className={`h-7 px-2 text-xs border ${inv.status === "ACTIVE" ? "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/20" : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20"}`}>
+                              {processing === inv.userId ? <Loader2 size={11} className="animate-spin" /> : inv.status === "ACTIVE" ? <><PauseCircle size={11} className="mr-1" />Pause</> : <><PlayCircle size={11} className="mr-1" />Resume</>}
+                            </Button>
+                          )}
+                          {(inv.status === "ACTIVE" || inv.status === "PAUSED") && (
+                            <Button size="sm" disabled={processing === inv.userId} onClick={() => handleCancelInv(inv.userId)}
+                              className="h-7 px-2 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20">
+                              <XCircle size={11} className="mr-1" />Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showCreatePlan && <PlanModal onClose={() => setShowCreatePlan(false)} onSuccess={load} />}
+      {editPlan && <PlanModal plan={editPlan} onClose={() => setEditPlan(null)} onSuccess={load} />}
+      {showAssign && <InvestmentModal users={users} isEdit={false} onClose={() => setShowAssign(false)} onSuccess={load} />}
+      {editInv && <InvestmentModal users={users} investment={editInv} isEdit={true} onClose={() => setEditInv(null)} onSuccess={load} />}
+      {fundsTarget && <AddFundsModal investment={fundsTarget} onClose={() => setFundsTarget(null)} onSuccess={load} />}
+    </div>
+  );
+}

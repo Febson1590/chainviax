@@ -1,0 +1,822 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ─── Chainviax remap: Tailwind sky/cyan utilities resolve to gold ─── */
+  --color-sky-50:  #fffbeb;
+  --color-sky-100: #fef3c7;
+  --color-sky-200: #fde68a;
+  --color-sky-300: #fcd34d;
+  --color-sky-400: #facc15;
+  --color-sky-500: #eab308;
+  --color-sky-600: #ca8a04;
+  --color-sky-700: #a16207;
+  --color-sky-800: #854d0e;
+  --color-sky-900: #713f12;
+  --color-sky-950: #422006;
+
+  --color-cyan-50:  #fffbeb;
+  --color-cyan-100: #fef3c7;
+  --color-cyan-200: #fde68a;
+  --color-cyan-300: #fcd34d;
+  --color-cyan-400: #facc15;
+  --color-cyan-500: #eab308;
+  --color-cyan-600: #ca8a04;
+  --color-cyan-700: #a16207;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ─── Chainviax Dark Theme (navy + gold) ─────────────────────────────── */
+:root {
+  --background: oklch(0.07 0.015 245);
+  --foreground: oklch(0.96 0.01 90);
+  --card: oklch(0.10 0.018 245);
+  --card-foreground: oklch(0.96 0.01 90);
+  --popover: oklch(0.10 0.018 245);
+  --popover-foreground: oklch(0.96 0.01 90);
+  --primary: oklch(0.78 0.16 85);
+  --primary-foreground: oklch(0.08 0.02 245);
+  --secondary: oklch(0.14 0.018 245);
+  --secondary-foreground: oklch(0.96 0.01 90);
+  --muted: oklch(0.14 0.018 245);
+  --muted-foreground: oklch(0.68 0.018 90);
+  --accent: oklch(0.78 0.16 85);
+  --accent-foreground: oklch(0.08 0.02 245);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.25 0.02 245);
+  --input: oklch(0.14 0.018 245);
+  --ring: oklch(0.78 0.16 85);
+  --chart-1: oklch(0.78 0.16 85);
+  --chart-2: oklch(0.70 0.15 60);
+  --chart-3: oklch(0.65 0.20 45);
+  --chart-4: oklch(0.55 0.20 150);
+  --chart-5: oklch(0.72 0.18 195);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.09 0.018 245);
+  --sidebar-foreground: oklch(0.96 0.01 90);
+  --sidebar-primary: oklch(0.78 0.16 85);
+  --sidebar-primary-foreground: oklch(0.08 0.02 245);
+  --sidebar-accent: oklch(0.12 0.018 245);
+  --sidebar-accent-foreground: oklch(0.96 0.01 90);
+  --sidebar-border: oklch(0.18 0.02 245);
+  --sidebar-ring: oklch(0.78 0.16 85);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    /* Force cursor inheritance so every element chains up to html's
+       cursor:default. This beats the browser UA "cursor:auto" that
+       makes the I-beam appear when hovering over text in divs/spans.
+       Explicit overrides for inputs/buttons/links follow below. */
+    cursor: inherit;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    /* Root anchor — all elements inherit cursor:default from here
+       unless explicitly overridden by a more specific rule below
+       or by a Tailwind cursor-* utility class. */
+    cursor: default;
+    /* Mobile overflow guard — prevents any deep-nested element from
+       forcing a horizontal scrollbar on narrow viewports. */
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+  /* Media can never push layout beyond their container */
+  img, video, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ── Text cursor: only real editable fields ─────────────────── */
+  /* NOTE: all :not() calls must be on ONE line — any whitespace
+     between them creates an unintended descendant combinator.    */
+  input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  [contenteditable="true"] {
+    cursor: text;
+  }
+
+  /* ── Pointer cursor: interactive elements ─────────────────────── */
+  a,
+  button,
+  select,
+  label[for],
+  [role="button"],
+  [role="link"],
+  [role="menuitem"],
+  [role="option"],
+  [role="tab"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  input[type="image"] {
+    cursor: pointer;
+  }
+
+  /* ── Disabled: not-allowed ──────────────────────────────────── */
+  [disabled],
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* ─── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(0.25 0.03 240); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.35 0.03 240); }
+
+/* ─── Glass ─────────────────────────────────────── */
+.glass-card {
+  background: rgba(7, 15, 30, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(234, 179, 8, 0.16);
+}
+
+.glass-card-hover {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+.glass-card-hover:hover {
+  border-color: rgba(234, 179, 8, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(234, 179, 8, 0.07),
+    0 8px 32px rgba(234, 179, 8, 0.08),
+    0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Mockup frame (dashboard) ───────────────────── */
+.mockup-frame {
+  background: rgba(3, 10, 22, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(234, 179, 8, 0.22);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(234, 179, 8, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Feature cards ──────────────────────────────── */
+.feature-card {
+  position: relative;
+  background: rgba(7, 15, 30, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(234, 179, 8, 0.1);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s ease,
+              border-color 0.35s ease,
+              background 0.35s ease;
+}
+/* Gradient border via pseudo-element */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(234, 179, 8, 0.35) 0%,
+    rgba(253, 224, 71, 0.15) 40%,
+    rgba(234, 179, 8, 0.0)  60%,
+    rgba(234, 179, 8, 0.25) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: transparent;
+  background: rgba(7, 15, 30, 0.85);
+  box-shadow:
+    0 8px 32px rgba(234, 179, 8, 0.12),
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 40px rgba(234, 179, 8, 0.035);
+}
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* ─── Ticker glow text ───────────────────────────── */
+.ticker-up   { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.55); }
+.ticker-down { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68,  68,  0.45); }
+
+/* ─── Glow ─────────────────────────────────────── */
+.glow-blue { box-shadow: 0 0 40px rgba(234, 179, 8, 0.15); }
+.glow-text { text-shadow: 0 0 30px rgba(234, 179, 8, 0.5); }
+
+/* ─── Gradient Text ──────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #eab308, #fde047, #facc15);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Backgrounds ────────────────────────────────── */
+.hero-bg {
+  background:
+    radial-gradient(ellipse 120% 75% at 50% -12%, rgba(234, 179, 8, 0.24), transparent),
+    radial-gradient(ellipse 40%  20% at 72% 78%,  rgba(251, 191, 36,  0.05), transparent),
+    radial-gradient(ellipse 65%  45% at 82% 55%,  rgba(253, 224, 71, 0.07), transparent),
+    radial-gradient(ellipse 50%  35% at 12% 78%,  rgba(234, 179, 8, 0.05), transparent),
+    oklch(0.07 0.02 240);
+}
+
+/* ─── Grain / noise texture ──────────────────────── */
+.noise-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* ─── Chart styles ───────────────────────────────── */
+.recharts-cartesian-axis-tick-value {
+  fill: oklch(0.65 0.02 220) !important;
+  font-size: 11px !important;
+}
+.recharts-tooltip-wrapper { outline: none !important; }
+
+/* ─── Table ──────────────────────────────────────── */
+.premium-table tbody tr:hover {
+  background: rgba(234, 179, 8, 0.03);
+}
+
+/* ─── Animations ─────────────────────────────────── */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes float-slow {
+  0%,  100% { transform: translateY(0px) scale(1); }
+  33%        { transform: translateY(-9px) scale(1.004); }
+  66%        { transform: translateY(-5px) scale(1.002); }
+}
+
+@keyframes btn-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(234, 179, 8, 0.65),
+      0 4px 24px rgba(234, 179, 8, 0.4),
+      0 0 0 0 rgba(234, 179, 8, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 44px rgba(234, 179, 8, 0.92),
+      0 4px 44px rgba(234, 179, 8, 0.62),
+      0 0 90px rgba(234, 179, 8, 0.18);
+  }
+}
+
+.animate-shimmer    { animation: shimmer 2s infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s infinite; }
+.animate-float      { animation: float 4s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+.animate-ticker     { animation: ticker 40s linear infinite; }
+.animate-btn-glow   { animation: btn-glow-pulse 2s ease-in-out infinite; }
+
+/* ─── Ticker pause on hover ──────────────────────── */
+.ticker-wrap:hover .animate-ticker { animation-play-state: paused; }
+
+/* ─── Hidden scrollbar (for horizontal pill rows) ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Google Translate — hide default UI ──────────────────
+   We use our own brand-styled dropdown (see components/language-switcher.tsx).
+   Google's script tries to inject a banner at the top of <body> and push
+   content down with an inline `top:40px` on <body>. Suppress all of it so
+   the site looks unchanged when translation is active. */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf { display: none !important; }
+body { top: 0 !important; }
+body > .skiptranslate { display: none !important; }
+.goog-tooltip,
+.goog-tooltip:hover { display: none !important; }
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+/* Google adds a `notranslate` font on the whole page mid-translation —
+   neutralize it so our brand font keeps rendering. */
+font[style*="vertical-align: inherit"] { font: inherit !important; }
+
+/* ─── Language Switcher — hardened fixed positioning ──────
+   iOS Safari + momentum scrolling + any ancestor with transform /
+   backdrop-filter / filter can cause `position: fixed` to jitter or drop
+   out of its anchor. We pin it explicitly with !important, force a GPU
+   compositing layer with translateZ(0), and use safe-area insets so the
+   switcher doesn't slide under the iPhone home bar. `contain: layout`
+   isolates it from any ancestor layout changes so re-renders elsewhere
+   never push it around. */
+/* The language selector is no longer a floating chip — it lives inside
+   the avatar dropdown (dashboard) and as a globe icon in the public
+   navbar. The `.language-switcher-fixed` and `.pb-lang-switcher` classes
+   that reserved space for the old chip are intentionally removed. */
+
+/* ════════════════════════════════════════════════════════════════════════
+   Sonner toast — premium Chainviax dark-glass styling
+   Applies to every variant (success / error / info / warning / default /
+   loading) via `[data-sonner-toast]`, with per-variant accent borders and
+   icon colours layered on top via `[data-type=...]`.
+   ════════════════════════════════════════════════════════════════════════ */
+
+[data-sonner-toaster] {
+  /* Respect iOS notch / Safari top chrome */
+  padding-top: env(safe-area-inset-top) !important;
+}
+
+[data-sonner-toast] {
+  /* Glass surface */
+  background: rgba(8, 14, 28, 0.78) !important;
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  color: #e2e8f0 !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(234, 179, 8, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  padding: 14px 14px !important;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  max-width: min(420px, calc(100vw - 1.5rem));
+}
+
+/* Title — bold, white */
+[data-sonner-toast] [data-title] {
+  color: #f8fafc !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.005em;
+}
+
+/* Description — lighter, smaller, proper gap from title */
+[data-sonner-toast] [data-description] {
+  color: rgba(203, 213, 225, 0.72) !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  margin-top: 3px !important;
+}
+
+/* Icon — breathing room */
+[data-sonner-toast] [data-icon] {
+  margin-right: 10px !important;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+/* Close button — blends into dark surface */
+[data-sonner-toast] [data-close-button] {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  color: rgba(203, 213, 225, 0.75) !important;
+  transform: translate(-4px, -4px);
+}
+[data-sonner-toast] [data-close-button]:hover {
+  background: rgba(30, 41, 59, 0.9) !important;
+  color: #f1f5f9 !important;
+}
+
+/* ─── Per-variant accents ─────────────────────────────────────────── */
+
+/* Success — emerald accent */
+[data-sonner-toast][data-type="success"] {
+  border-color: rgba(16, 185, 129, 0.32) !important;
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(16, 185, 129, 0.10),
+    0 0 30px -12px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: #34d399 !important;
+}
+
+/* Error — red accent */
+[data-sonner-toast][data-type="error"] {
+  border-color: rgba(239, 68, 68, 0.32) !important;
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(239, 68, 68, 0.10),
+    0 0 30px -12px rgba(239, 68, 68, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: #f87171 !important;
+}
+
+/* Warning — amber accent */
+[data-sonner-toast][data-type="warning"] {
+  border-color: rgba(245, 158, 11, 0.32) !important;
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(245, 158, 11, 0.10),
+    0 0 30px -12px rgba(245, 158, 11, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: #fbbf24 !important;
+}
+
+/* Info + default — brand sky accent */
+[data-sonner-toast][data-type="info"],
+[data-sonner-toast][data-type="default"] {
+  border-color: rgba(234, 179, 8, 0.30) !important;
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(234, 179, 8, 0.10),
+    0 0 30px -12px rgba(234, 179, 8, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+[data-sonner-toast][data-type="info"] [data-icon],
+[data-sonner-toast][data-type="default"] [data-icon] {
+  color: #facc15 !important;
+}
+
+/* Loading — subtle, no accent flood */
+[data-sonner-toast][data-type="loading"] [data-icon] {
+  color: #94a3b8 !important;
+}
+
+/* ─── Border divider ─────────────────────────────── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.2), transparent);
+}
+
+/* ─── Utility ────────────────────────────────────── */
+.text-profit { color: #10b981; }
+.text-loss { color: #ef4444; }
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(234, 179, 8, 0.04) 25%,
+    rgba(234, 179, 8, 0.08) 50%,
+    rgba(234, 179, 8, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Chainviax Exchange Design System
+   A unified set of primitives used by the public-facing UI so every
+   surface (hero, market panel, trade terminal, feature grids, footer)
+   reads from the same visual vocabulary.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Panel — the core surface for exchange-grade modules ───────────── */
+.vx-panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(8, 16, 32, 0.92) 0%, rgba(5, 12, 26, 0.95) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 0 0 1px rgba(234, 179, 8, 0.02),
+    0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  /* Never overflow the parent container — critical for mobile grids. */
+  max-width: 100%;
+  min-width: 0;
+}
+.vx-panel-hover {
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.vx-panel-hover:hover {
+  border-color: rgba(234, 179, 8, 0.25);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 0 0 1px rgba(234, 179, 8, 0.08),
+    0 28px 70px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(234, 179, 8, 0.06);
+}
+
+/* Panel header — a consistent 44px strip used by every exchange module */
+.vx-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  height: 44px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  background: linear-gradient(180deg, rgba(10, 20, 38, 0.65) 0%, rgba(6, 14, 30, 0.2) 100%);
+}
+.vx-panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vx-panel-title-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fde047;
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.8);
+}
+
+/* ── Data row — "exchange table row" primitive ──────────────────────── */
+.vx-row {
+  display: grid;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+  transition: background-color 140ms ease;
+  min-width: 0;
+  max-width: 100%;
+}
+.vx-row > * { min-width: 0; }
+.vx-row:last-child { border-bottom: 0; }
+.vx-row:hover      { background: rgba(234, 179, 8, 0.035); }
+
+/* ── Market table responsive grid template ──────────────────────────── */
+/* 3 columns on mobile, 5 on sm, 6 on md. Using classic media queries
+   avoids stale fr-tracks for display:none cells, which would otherwise
+   leave empty space on the right of each row on narrow viewports. */
+.vx-market-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.8fr)
+    minmax(0, 1.1fr)
+    minmax(0, 0.9fr);
+  column-gap: 12px;
+}
+@media (min-width: 640px) {
+  .vx-market-grid {
+    grid-template-columns:
+      minmax(0, 1.8fr)
+      minmax(0, 1.1fr)
+      minmax(0, 0.8fr)
+      minmax(0, 1fr)
+      minmax(0, 1.1fr);
+  }
+}
+@media (min-width: 768px) {
+  .vx-market-grid {
+    grid-template-columns:
+      minmax(0, 1.8fr)
+      minmax(0, 1.1fr)
+      minmax(0, 0.8fr)
+      minmax(0, 1fr)
+      minmax(0, 1fr)
+      minmax(0, 1.1fr);
+  }
+}
+
+/* ── Segmented tabs ──────────────────────────────────────────────────── */
+.vx-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(6, 14, 28, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+.vx-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+.vx-tab:hover { color: #e2e8f0; }
+.vx-tab[data-active="true"] {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.22), rgba(234, 179, 8, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(234, 179, 8, 0.28);
+}
+
+/* ── Stat chip ──────────────────────────────────────────────────────── */
+.vx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(6, 14, 30, 0.7);
+  color: #cbd5e1;
+}
+.vx-chip-up   { color: #34d399; border-color: rgba(52, 211, 153, 0.22); background: rgba(16, 185, 129, 0.08); }
+.vx-chip-down { color: #f87171; border-color: rgba(248, 113, 113, 0.22); background: rgba(239, 68, 68, 0.08); }
+
+/* ── Buy / Sell / primary / ghost buttons ───────────────────────────── */
+.vx-btn-buy {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  color: #02160f;
+  font-weight: 800;
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 10px 30px rgba(16, 185, 129, 0.22);
+  transition: transform 140ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+.vx-btn-buy:hover   { filter: brightness(1.06); box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 14px 40px rgba(16,185,129,0.32); }
+.vx-btn-buy:active  { transform: translateY(1px); }
+
+.vx-btn-sell {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  color: #1a0606;
+  font-weight: 800;
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 10px 30px rgba(239, 68, 68, 0.22);
+  transition: transform 140ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+.vx-btn-sell:hover  { filter: brightness(1.06); box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 14px 40px rgba(239,68,68,0.32); }
+.vx-btn-sell:active { transform: translateY(1px); }
+
+.vx-btn-primary {
+  background: linear-gradient(180deg, #facc15 0%, #eab308 100%);
+  color: #01131f;
+  font-weight: 700;
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 10px 30px rgba(234, 179, 8, 0.28);
+  transition: transform 140ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+.vx-btn-primary:hover  { filter: brightness(1.06); box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 14px 40px rgba(234, 179, 8,0.38); }
+.vx-btn-primary:active { transform: translateY(1px); }
+
+.vx-btn-ghost {
+  background: rgba(148, 163, 184, 0.05);
+  color: #e2e8f0;
+  font-weight: 600;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+.vx-btn-ghost:hover {
+  background: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.35);
+  color: #ffffff;
+}
+
+/* ── Soft divider ───────────────────────────────────────────────────── */
+.vx-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.14), transparent);
+}
+
+/* ── Micro-label (section eyebrow) ──────────────────────────────────── */
+.vx-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #facc15;
+}
+.vx-eyebrow::before {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.6), transparent);
+}
+
+/* ── Kbd (keyboard hint) ────────────────────────────────────────────── */
+.vx-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* ── Terminal grid backdrop ─────────────────────────────────────────── */
+.vx-grid-bg {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Live pulse (only where data is truly live) ─────────────────────── */
+@keyframes vx-live-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%      { opacity: 0.55; transform: scale(1.35); }
+}
+.vx-live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fde047;
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.8);
+  animation: vx-live-pulse 2.2s ease-in-out infinite;
+}
