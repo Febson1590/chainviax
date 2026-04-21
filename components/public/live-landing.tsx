@@ -99,6 +99,68 @@ export function LivePriceStrip({ initial, symbols }: { initial: MarketAsset[]; s
   );
 }
 
+/* ═══ LIVE MARKET TABLE — expanded row list below the featured cards ══ */
+
+export function LiveMarketTable({ initial, symbols }: { initial: MarketAsset[]; symbols: string[] }) {
+  const { assets, flash } = useLiveMarkets(initial);
+  const rows = symbols.map((s) => pickAsset(assets, s)).filter(Boolean) as MarketAsset[];
+
+  return (
+    <div className="chainviax-hairline-bar overflow-hidden">
+      <div className="hidden sm:grid grid-cols-[1.3fr_1fr_0.9fr_1.2fr_1fr] px-6 py-3 border-b border-white/[0.06] text-[10px] uppercase tracking-[0.22em] text-slate-500 font-bold">
+        <span>Asset</span>
+        <span className="text-right">Price</span>
+        <span className="text-right">24h</span>
+        <span className="text-right">Volume</span>
+        <span className="text-right">Trade</span>
+      </div>
+      {rows.map((a, i) => {
+        const up = a.change >= 0;
+        const f = flash[a.symbol];
+        const flashCls = f === "up" ? "text-emerald-400" : f === "down" ? "text-red-400" : "text-white";
+        return (
+          <div key={a.symbol}
+               className={`grid grid-cols-[1.3fr_1fr_0.9fr_1.2fr_1fr] sm:grid-cols-[1.3fr_1fr_0.9fr_1.2fr_1fr] items-center px-6 py-4 ${i < rows.length - 1 ? "border-b border-white/[0.04]" : ""} hover:bg-white/[0.02] transition-colors`}>
+            <div className="flex items-center gap-3 col-span-2 sm:col-span-1">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-black text-white"
+                   style={{ background: coinRing(a.symbol), boxShadow: `0 6px 14px ${coinRing(a.symbol)}55` }}>
+                {coinGlyph(a.symbol)}
+              </div>
+              <div>
+                <div className="text-[13.5px] font-bold text-white">{a.name}</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">{a.symbol}</div>
+              </div>
+            </div>
+            <div className={`text-right text-[14px] font-bold tabular-nums transition-colors duration-500 ${flashCls}`}>
+              {formatCurrency(a.price)}
+            </div>
+            <div className="text-right">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold tabular-nums ${up ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>
+                {up ? "+" : "−"}{Math.abs(a.change).toFixed(2)}%
+              </span>
+            </div>
+            <div className="text-right text-[12.5px] text-slate-400 font-semibold tabular-nums hidden sm:block">
+              ${compactN(a.volume24h)}
+            </div>
+            <div className="flex justify-end">
+              <Link href="/markets" className="chainviax-btn-outline-dark inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold">
+                Trade
+              </Link>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function compactN(n: number): string {
+  if (n >= 1e9) return `${(n/1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n/1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n/1e3).toFixed(1)}K`;
+  return `${n.toFixed(0)}`;
+}
+
 /* ═══ LIVE MARKET CARDS — 3-up, polled ════════════════════════════════ */
 
 export function LiveMarketCards({ initial, symbols }: { initial: MarketAsset[]; symbols: string[] }) {

@@ -411,6 +411,34 @@
   overflow: hidden;
 }
 
+/* Floating stat chip used in the hero trading panel */
+.chainviax-mini-chip {
+  background: linear-gradient(180deg, rgba(14, 16, 24, 0.96) 0%, rgba(6, 8, 14, 0.98) 100%);
+  border: 1px solid rgba(244, 196, 64, 0.25);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(244, 196, 64, 0.06);
+}
+
+/* Add a subtle gold top-rim line to elite cards for depth */
+.chainviax-card-elite {
+  overflow: hidden;
+}
+.chainviax-card-elite > :first-child::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 196, 64, 0.45), transparent);
+  pointer-events: none;
+}
+
 /* ─── Backgrounds ────────────────────────────────── */
 .hero-bg {
   background:

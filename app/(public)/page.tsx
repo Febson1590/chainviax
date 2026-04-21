@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { getMarketAssets, type MarketAsset } from "@/lib/coingecko";
 import { formatCurrency, formatCompact } from "@/lib/utils";
-import { LiveHeroPrice, LivePriceStrip, LiveMarketCards } from "@/components/public/live-landing";
+import { LiveHeroPrice, LivePriceStrip, LiveMarketCards, LiveMarketTable } from "@/components/public/live-landing";
 
 /* ═══════════════════════════════════════════════════════════════════════
    Chainviax — premium crypto broker landing page
@@ -53,33 +53,35 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
   const price  = btc?.price ?? 43582.21;
   const change = btc?.change ?? 2.34;
   const isUp   = change >= 0;
-  void price; void change; void isUp;
+  const high24 = price * 1.018;
+  const low24  = price * 0.986;
 
   return (
-    <section className="relative z-10 pt-28 md:pt-36 pb-20 md:pb-28 px-5 sm:px-8 lg:px-12">
-      <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)] gap-12 lg:gap-14 items-center">
+    <section className="relative z-10 pt-28 md:pt-36 pb-20 md:pb-32 px-5 sm:px-8 lg:px-12">
+      <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] gap-14 lg:gap-16 items-center">
         {/* left */}
-        <div className="relative max-w-xl">
-          <div className="chainviax-eyebrow inline-flex items-center gap-2 mb-7">
+        <div className="relative max-w-2xl">
+          <div className="chainviax-eyebrow inline-flex items-center gap-2 mb-9">
             <span className="chainviax-dot" /> Trusted Crypto Broker
           </div>
-          <h1 className="font-bold tracking-[-0.02em] text-[50px] sm:text-[64px] lg:text-[80px] leading-[0.98]">
+          <h1 className="font-bold tracking-[-0.025em] text-[60px] sm:text-[80px] lg:text-[104px] leading-[0.92]">
             <span className="block text-white">Your Premium</span>
             <span className="block chainviax-gold-text">Crypto Broker.</span>
           </h1>
-          <p className="mt-6 text-[16px] sm:text-[17px] text-slate-300/90 leading-relaxed max-w-md">
+          <p className="mt-8 text-[17px] sm:text-[18px] text-slate-300/90 leading-[1.55] max-w-lg">
             Buy, sell, and hold Bitcoin, Ethereum, and the top cryptocurrencies.
-            Safe, simple, and fast.
+            <span className="block mt-1 text-slate-400/80 text-[15px]">Safe, simple, and fast.</span>
           </p>
-          <div className="mt-9 flex flex-col sm:flex-row gap-3">
-            <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[54px] px-9 rounded-[10px] text-[14px] font-bold tracking-wide">
+          <div className="mt-10 flex flex-col sm:flex-row gap-3">
+            <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[56px] px-10 rounded-[10px] text-[14px] font-bold tracking-wide">
               Create Account <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/markets" className="chainviax-btn-outline inline-flex items-center justify-center h-[54px] px-8 rounded-[10px] text-[14px] font-semibold">
+            <Link href="/markets" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
               View Markets
             </Link>
           </div>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-slate-500">
+          {/* Inline trust row with divider */}
+          <div className="mt-10 pt-6 border-t border-white/[0.06] flex flex-wrap items-center gap-x-8 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-slate-500">
             <span>Safe storage</span>
             <span className="h-1 w-1 rounded-full bg-amber-500/60" />
             <span>Live 24/7</span>
@@ -88,34 +90,90 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
           </div>
         </div>
 
-        {/* right — coins + chart card */}
-        <div className="relative w-full min-h-[460px] lg:min-h-[560px]">
+        {/* right — cinematic trading panel */}
+        <div className="relative w-full min-h-[520px] lg:min-h-[620px]">
+          {/* BIG ambient gold glow behind panel */}
+          <div aria-hidden className="absolute inset-8 -z-10 blur-[120px] opacity-70"
+               style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(244,196,64,0.30), transparent 70%)" }} />
+
+          {/* main trading card */}
           <div className="absolute bottom-0 right-0 w-full md:w-[94%] lg:w-[98%] chainviax-card-elite overflow-hidden">
-            <div className="flex items-center justify-between px-5 h-11 border-b border-white/[0.06] bg-black/30">
+            {/* window chrome */}
+            <div className="flex items-center justify-between px-6 h-12 border-b border-white/[0.06] bg-black/30">
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#1f1f24]" />
                 <span className="h-2.5 w-2.5 rounded-full bg-[#1f1f24]" />
                 <span className="h-2.5 w-2.5 rounded-full bg-[#1f1f24]" />
+                <span className="ml-4 text-[10.5px] uppercase tracking-[0.22em] text-slate-500 font-bold">chainviax.com</span>
               </div>
               <span className="text-[11px] uppercase tracking-[0.22em] text-amber-300/90 font-bold">BTC / USD</span>
-              <span className="text-[10px] uppercase tracking-widest text-slate-600 font-semibold">Live</span>
-            </div>
-            <div className="flex items-center justify-between px-5 pt-4">
-              <LiveHeroPrice initial={initial} />
               <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-emerald-400/90 font-bold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
               </span>
             </div>
-            <div className="relative h-[220px] sm:h-[260px] lg:h-[300px]">
+
+            {/* price + stats row */}
+            <div className="flex items-start justify-between px-6 pt-5">
+              <LiveHeroPrice initial={initial} />
+              <div className="hidden sm:flex items-center gap-5 text-right">
+                <div>
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-slate-500 font-bold">24h High</div>
+                  <div className="text-[13px] font-bold text-emerald-400 tabular-nums">{formatCurrency(high24)}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-slate-500 font-bold">24h Low</div>
+                  <div className="text-[13px] font-bold text-red-400 tabular-nums">{formatCurrency(low24)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* timeframe tabs */}
+            <div className="flex items-center justify-between px-6 pt-4">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold">
+                {["1H","4H","1D","1W","1M"].map((t,i) => (
+                  <span key={t} className={`px-2.5 py-1 rounded-md ${i===2 ? "bg-amber-500/15 text-amber-300 border border-amber-500/30" : "text-slate-500 border border-transparent"}`}>{t}</span>
+                ))}
+              </div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-600 font-bold">Candles · 5m</div>
+            </div>
+
+            {/* chart */}
+            <div className="relative h-[240px] sm:h-[280px] lg:h-[320px] mt-2">
               <HeroChart />
             </div>
+
+            {/* volume bars strip */}
+            <div className="relative h-[48px] border-t border-white/[0.06] flex items-end justify-between gap-0.5 px-6 pt-2 pb-2">
+              {Array.from({ length: 40 }).map((_, i) => {
+                const h = 8 + Math.abs(Math.sin(i * 1.6) * 28) + (i % 5 === 0 ? 12 : 0);
+                const up = i % 3 !== 0;
+                return (
+                  <span key={i} className={`block w-[3px] rounded-sm ${up ? "bg-emerald-500/55" : "bg-red-500/45"}`} style={{ height: h }} />
+                );
+              })}
+              <div className="absolute right-6 top-2 text-[9px] uppercase tracking-widest text-slate-600 font-bold">Volume</div>
+            </div>
           </div>
+
+          {/* Floating mini-stat: BTC price chip (top-right) */}
+          <div className="absolute right-2 top-2 hidden md:flex chainviax-mini-chip items-center gap-3 px-4 py-3">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-[18px] font-black text-white"
+                 style={{ background: "linear-gradient(145deg,#f7931a,#c56a00)", boxShadow: "0 6px 18px rgba(247,147,26,0.5)" }}>₿</div>
+            <div>
+              <div className="text-[9px] uppercase tracking-[0.25em] text-slate-500 font-bold">BTC / USD</div>
+              <div className="text-[14px] font-bold text-white tabular-nums">{formatCurrency(price)}</div>
+            </div>
+            <div className={`pl-3 border-l border-white/10 ${isUp ? "text-emerald-400" : "text-red-400"} text-[11px] font-bold tabular-nums`}>
+              {isUp ? "+" : "−"}{Math.abs(change).toFixed(2)}%
+            </div>
+          </div>
+
           {/* BTC coin */}
-          <div className="absolute left-[2%] sm:left-[4%] -top-2 sm:top-[-10px] w-[38%] sm:w-[32%] lg:w-[34%] max-w-[240px] drop-shadow-[0_40px_80px_rgba(247,147,26,0.35)]">
+          <div className="absolute left-[2%] sm:left-[4%] -top-2 sm:top-[-10px] w-[36%] sm:w-[30%] lg:w-[32%] max-w-[230px] drop-shadow-[0_50px_90px_rgba(247,147,26,0.4)]">
             <Image src="/landing/btc-coin.png" alt="Bitcoin" width={520} height={520} priority className="w-full h-auto select-none" />
           </div>
           {/* Chainviax coin */}
-          <div className="absolute right-[4%] sm:right-[8%] top-[18%] w-[38%] sm:w-[30%] lg:w-[32%] max-w-[230px] drop-shadow-[0_40px_80px_rgba(244,196,64,0.45)]">
+          <div className="absolute right-[6%] sm:right-[10%] top-[16%] w-[36%] sm:w-[28%] lg:w-[30%] max-w-[220px] drop-shadow-[0_50px_90px_rgba(244,196,64,0.5)]">
             <Image src="/landing/chainviax-coin.png" alt="Chainviax" width={520} height={520} priority className="w-full h-auto select-none" />
           </div>
         </div>
@@ -196,8 +254,12 @@ function MarketsSection({ initial }: { initial: MarketAsset[] }) {
           headingGold="one tap away."
           rightLink={{ href: "/markets", label: "View all" }}
         />
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
           <LiveMarketCards initial={initial} symbols={["BTC", "ETH", "USDT"]} />
+        </div>
+        {/* expanded live market table — real trading interface feel */}
+        <div className="mt-8">
+          <LiveMarketTable initial={initial} symbols={["SOL", "BNB", "XRP", "DOGE", "AVAX", "LINK"]} />
         </div>
       </div>
     </section>
@@ -331,27 +393,34 @@ function Field({ label, value, accent }: { label: string; value: string; accent?
 
 function WhySection() {
   const items = [
-    { icon: Zap,         title: "Fair Prices",   desc: "Buy and sell at live market rates. No hidden markups." },
-    { icon: ShieldCheck, title: "Your Crypto is Safe", desc: "Most funds are kept offline in cold storage, monitored 24/7." },
-    { icon: LineChart,   title: "Easy to Use",   desc: "Clean charts, simple orders, and a dashboard anyone can follow." },
+    { icon: Zap,         n: "01", title: "Fair Prices",         desc: "Buy and sell at live market rates. No hidden markups, no surprise spreads." },
+    { icon: ShieldCheck, n: "02", title: "Your Crypto is Safe", desc: "Most funds are kept offline in cold storage and monitored around the clock." },
+    { icon: LineChart,   n: "03", title: "Easy to Use",         desc: "Clean charts, simple orders, and a dashboard anyone can follow from day one." },
   ];
   return (
-    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-20 md:py-24">
-      <div className="max-w-[1280px] mx-auto">
+    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
+      <div className="max-w-[1320px] mx-auto">
         <SectionHeading eyebrow="Why Chainviax" headingLead="Built to make" headingGold="trading simple." />
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
-          {items.map((f) => (
-            <div key={f.title} className="chainviax-card-elite p-7">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-                   style={{
-                     background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
-                     border: "1px solid rgba(244,196,64,0.45)",
-                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
-                   }}>
-                <f.icon className="h-5 w-5 text-amber-300" />
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 relative">
+          {/* top + bottom hairlines */}
+          <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/25 to-transparent" />
+          <div className="absolute -bottom-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+          {items.map((f, i) => (
+            <div key={f.title} className={`py-10 px-2 md:px-8 relative ${i > 0 ? "md:border-l border-white/[0.06]" : ""}`}>
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+                     style={{
+                       background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
+                       border: "1px solid rgba(244,196,64,0.4)",
+                       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(244,196,64,0.15)",
+                     }}>
+                  <f.icon className="h-5 w-5 text-amber-300" />
+                </div>
+                <span className="chainviax-gold-text text-[34px] font-bold tabular-nums leading-none">{f.n}</span>
               </div>
-              <h3 className="text-[18px] font-bold text-white mb-2">{f.title}</h3>
-              <p className="text-[14px] text-slate-400 leading-relaxed">{f.desc}</p>
+              <h3 className="text-[22px] sm:text-[24px] font-bold text-white mb-3 tracking-tight">{f.title}</h3>
+              <p className="text-[14.5px] text-slate-400 leading-[1.6] max-w-sm">{f.desc}</p>
+              <div className="mt-6 h-px w-16 bg-gradient-to-r from-amber-500 to-amber-500/0" />
             </div>
           ))}
         </div>
@@ -364,32 +433,36 @@ function WhySection() {
 
 function HowItWorks() {
   const steps = [
-    { n: "01", icon: UserPlus,   title: "Sign Up",         desc: "Create your free account in under a minute." },
-    { n: "02", icon: BadgeCheck, title: "Verify Your ID",  desc: "Upload a photo of your ID. Most checks are done the same day." },
-    { n: "03", icon: Wallet,     title: "Fund & Trade",    desc: "Add money, pick a coin, and start trading with one tap." },
+    { n: "01", icon: UserPlus,   title: "Sign Up",         desc: "Create your free account with just an email. Under a minute." },
+    { n: "02", icon: BadgeCheck, title: "Verify Your ID",  desc: "Upload a photo of your ID. Most checks are approved the same day." },
+    { n: "03", icon: Wallet,     title: "Fund & Trade",    desc: "Add money, pick a coin, and start trading with a single tap." },
   ];
   return (
-    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-20 md:py-24">
-      <div className="max-w-[1280px] mx-auto">
+    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
+      <div className="max-w-[1320px] mx-auto">
         <SectionHeading eyebrow="Getting Started" headingLead="Start trading in" headingGold="three steps." />
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 relative">
-          <div aria-hidden className="hidden md:block absolute top-[58px] left-[16%] right-[16%] h-px bg-gradient-to-r from-amber-500/0 via-amber-500/40 to-amber-500/0" />
-          {steps.map((s) => (
-            <div key={s.n} className="chainviax-card-elite p-7 relative">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+        <div className="mt-14 relative">
+          {/* continuous dashed gold path */}
+          <div aria-hidden className="hidden md:block absolute top-9 left-[10%] right-[10%] h-px"
+               style={{ backgroundImage: "linear-gradient(90deg, rgba(244,196,64,0.4) 50%, transparent 0)", backgroundSize: "10px 1px" }} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
+            {steps.map((s) => (
+              <div key={s.n} className="relative flex flex-col items-start md:items-center md:text-center">
+                {/* numbered ring */}
+                <div className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6"
                      style={{
-                       background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
+                       background: "radial-gradient(circle at 35% 30%, rgba(244,196,64,0.35), rgba(139,101,8,0.12) 70%)",
                        border: "1px solid rgba(244,196,64,0.45)",
+                       boxShadow: "0 20px 60px rgba(244,196,64,0.18), inset 0 1px 0 rgba(255,255,255,0.15)",
                      }}>
-                  <s.icon className="h-5 w-5 text-amber-300" />
+                  <s.icon className="h-6 w-6 text-amber-200" />
+                  <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black text-[#1b1205] bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 shadow-[0_6px_14px_rgba(244,196,64,0.55)]">{s.n}</span>
                 </div>
-                <span className="chainviax-gold-text text-[26px] font-bold tracking-tight tabular-nums">{s.n}</span>
+                <h3 className="text-[22px] sm:text-[24px] font-bold text-white mb-2 tracking-tight">{s.title}</h3>
+                <p className="text-[14.5px] text-slate-400 leading-[1.6] max-w-xs">{s.desc}</p>
               </div>
-              <h3 className="mt-5 text-[18px] font-bold text-white">{s.title}</h3>
-              <p className="mt-2 text-[14px] text-slate-400 leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
