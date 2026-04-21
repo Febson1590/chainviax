@@ -77,14 +77,17 @@ export default function LoginPage() {
 function BrandingPanel() {
   return (
     <div className="hidden lg:flex relative w-1/2 flex-col justify-between overflow-hidden p-10 xl:p-14">
-      {/* Ambient gold wash */}
+      {/* Ambient gold wash (muted — text must win) */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-200px] right-[-150px] w-[700px] h-[700px] rounded-full blur-[120px] opacity-40"
-             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.35), transparent 65%)" }} />
-        <div className="absolute bottom-[-100px] left-[-200px] w-[600px] h-[600px] rounded-full blur-[140px] opacity-30"
-             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.28), transparent 70%)" }} />
-        {/* subtle faded trading chart behind */}
-        <svg viewBox="0 0 600 400" preserveAspectRatio="none" className="absolute inset-0 w-full h-full opacity-[0.12]">
+        <div className="absolute top-[-200px] right-[-150px] w-[700px] h-[700px] rounded-full blur-[120px] opacity-25"
+             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.30), transparent 65%)" }} />
+        <div className="absolute bottom-[-100px] left-[-200px] w-[600px] h-[600px] rounded-full blur-[140px] opacity-20"
+             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.22), transparent 70%)" }} />
+        {/* dark readability overlay — sits above the chart, under the text */}
+        <div className="absolute inset-0"
+             style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 100%)" }} />
+        {/* subtle faded trading chart behind (toned way down) */}
+        <svg viewBox="0 0 600 400" preserveAspectRatio="none" className="absolute inset-0 w-full h-full opacity-[0.06]">
           <defs>
             <linearGradient id="login-chart-area" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f4c440" stopOpacity="0.35" />
@@ -132,7 +135,7 @@ function BrandingPanel() {
             Trade Smarter.
           </span>
         </h1>
-        <p className="mt-7 text-[15.5px] text-slate-400 leading-[1.65] max-w-md">
+        <p className="mt-7 text-[15.5px] font-medium text-slate-200 leading-[1.65] max-w-md">
           Securely log in to manage your investments, track performance, and copy top traders.
         </p>
 
@@ -178,8 +181,8 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
         {icon}
       </div>
       <div>
-        <div className="text-[14px] font-semibold text-white tracking-tight">{title}</div>
-        <div className="text-[12.5px] text-slate-500 leading-[1.55] mt-1">{desc}</div>
+        <div className="text-[14.5px] font-semibold text-white tracking-tight">{title}</div>
+        <div className="text-[13px] font-medium text-slate-300 leading-[1.55] mt-1">{desc}</div>
       </div>
     </li>
   );
@@ -239,7 +242,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
       <h2 className="text-[26px] sm:text-[28px] font-bold text-white text-center tracking-[-0.01em]">
         Log in to Chainviax
       </h2>
-      <p className="mt-2.5 text-[13.5px] text-slate-400 text-center">
+      <p className="mt-2.5 text-[14px] font-medium text-slate-200 text-center">
         Enter your details to continue to your account.
       </p>
 
@@ -252,7 +255,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-[22px]">
         <div>
-          <label className="block text-[12.5px] font-semibold text-slate-300 mb-2.5 tracking-wide">Email Address</label>
+          <label className="block text-[13px] font-semibold text-white mb-2.5 tracking-wide">Email Address</label>
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
             <input
@@ -266,7 +269,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
         </div>
 
         <div>
-          <label className="block text-[12.5px] font-semibold text-slate-300 mb-2.5 tracking-wide">Password</label>
+          <label className="block text-[13px] font-semibold text-white mb-2.5 tracking-wide">Password</label>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
             <input
@@ -304,7 +307,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
         </button>
       </form>
 
-      <p className="mt-8 text-center text-[13px] text-slate-500">
+      <p className="mt-8 text-center text-[13.5px] font-medium text-slate-200">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="text-amber-300 hover:text-amber-200 font-semibold">
           Sign up
@@ -402,8 +405,8 @@ function OtpCard({ email, password, onBack }: { email: string; password: string;
         </div>
       </div>
       <h2 className="text-[26px] font-bold text-white text-center tracking-[-0.01em]">Verify your sign-in</h2>
-      <p className="mt-2 text-[14px] text-slate-400 text-center">
-        We sent a 6-digit code to <span className="text-amber-300 font-medium">{email}</span>.
+      <p className="mt-2 text-[14px] font-medium text-slate-200 text-center">
+        We sent a 6-digit code to <span className="text-amber-300 font-semibold">{email}</span>.
       </p>
 
       <form onSubmit={handleOtpSubmit} className="mt-8">
@@ -452,7 +455,7 @@ function OtpCard({ email, password, onBack }: { email: string; password: string;
       </form>
 
       <div className="mt-5 pt-5 border-t border-white/[0.07] text-center">
-        <p className="text-[13px] text-slate-500 mb-2">Didn&apos;t receive the code?</p>
+        <p className="text-[13px] font-medium text-slate-300 mb-2">Didn&apos;t receive the code?</p>
         <button type="button" onClick={handleResend} disabled={resending || resendCooldown > 0}
                 className="inline-flex items-center gap-2 text-[13px] font-semibold text-amber-300 hover:text-amber-200 disabled:text-slate-600 disabled:cursor-not-allowed">
           {resending
