@@ -83,7 +83,7 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
             <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[56px] px-10 rounded-[10px] text-[14px] font-bold tracking-wide">
               Start Investing <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="#traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
+            <Link href="/traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
               Explore Traders
             </Link>
           </div>
@@ -270,7 +270,7 @@ function TwoWaysSection() {
             <p className="text-[15px] text-slate-400 leading-[1.6] max-w-md mb-6">
               Pick a trader with a strong track record. Your account follows every trade they make.
             </p>
-            <Link href="#traders" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
+            <Link href="/traders" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
               Browse Traders <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -566,7 +566,7 @@ function ClosingCTA() {
               <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[54px] px-9 rounded-[10px] text-[14px] font-bold tracking-wide">
                 Start Investing <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="#traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[54px] px-8 rounded-[10px] text-[14px] font-semibold">
+              <Link href="/traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[54px] px-8 rounded-[10px] text-[14px] font-semibold">
                 Explore Traders
               </Link>
             </div>

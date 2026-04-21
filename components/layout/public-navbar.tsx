@@ -9,7 +9,7 @@ import { LanguageMenuDialog } from "@/components/language-switcher";
 
 const navLinks = [
   { href: "/markets",   label: "Markets"      },
-  { href: "/#traders",  label: "Copy Trading" },
+  { href: "/traders",   label: "Copy Trading" },
   { href: "/pricing",   label: "Earn"         },
   { href: "/about",     label: "About"        },
   { href: "/help",      label: "Support"      },

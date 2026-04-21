@@ -10,7 +10,7 @@ import { COMPANY, CONTACT } from "@/lib/company";
 const footerLinks: Record<string, { href: string; label: string; external?: boolean }[]> = {
   Platform: [
     { href: "/markets",   label: "Markets"       },
-    { href: "/#traders",  label: "Copy Trading"  },
+    { href: "/traders",   label: "Copy Trading"  },
     { href: "/pricing",   label: "Fees & Pricing" },
     { href: "/register",  label: "Open Account"  },
   ],
