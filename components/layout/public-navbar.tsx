@@ -8,11 +8,11 @@ import { Menu, X, ChevronRight, Globe } from "lucide-react";
 import { LanguageMenuDialog } from "@/components/language-switcher";
 
 const navLinks = [
-  { href: "/markets",  label: "Markets"  },
-  { href: "/markets",  label: "Trading"  },
-  { href: "/pricing",  label: "Earn"     },
-  { href: "/about",    label: "About"    },
-  { href: "/help",     label: "Support"  },
+  { href: "/markets",   label: "Markets"      },
+  { href: "/#traders",  label: "Copy Trading" },
+  { href: "/pricing",   label: "Earn"         },
+  { href: "/about",     label: "About"        },
+  { href: "/help",      label: "Support"      },
 ];
 
 export function PublicNavbar() {

@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { getMarketAssets, type MarketAsset } from "@/lib/coingecko";
 import { formatCurrency, formatCompact } from "@/lib/utils";
+import { getFeaturedLandingTraders } from "@/lib/actions/investment";
+import { auth } from "@/auth";
 import {
   LiveHeroPrice, LivePriceStrip, LiveMarketCards, LiveMarketTable,
 } from "@/components/public/live-landing";
@@ -16,9 +18,14 @@ import {
    ═══════════════════════════════════════════════════════════════════════ */
 
 export default async function HomePage() {
-  const markets = await getMarketAssets();
+  const [markets, featuredTraders, session] = await Promise.all([
+    getMarketAssets(),
+    getFeaturedLandingTraders(3),
+    auth(),
+  ]);
   const btc  = markets.find((a) => a.symbol === "BTC");
   const totalVolume = markets.reduce((a, m) => a + (m.volume24h || 0), 0);
+  const isSignedIn = !!session?.user?.id;
 
   return (
     <div className="relative bg-[#04060c] text-white overflow-x-hidden">
@@ -26,7 +33,9 @@ export default async function HomePage() {
       <Hero initial={markets} btc={btc} />
       <LivePricesSection initial={markets} />
       <TwoWaysSection />
-      <TradersSection />
+      {featuredTraders.length > 0 && (
+        <TradersSection traders={featuredTraders} isSignedIn={isSignedIn} />
+      )}
       <MarketsSection initial={markets} />
       <FeaturesRow />
       <HowItWorks />
@@ -272,26 +281,11 @@ function TwoWaysSection() {
   );
 }
 
-/* ═══ TOP TRADERS ══════════════════════════════════════════════════════ */
+/* ═══ TOP TRADERS — fed by db.copyTrader (featured on landing) ════════ */
 
-type Trader = {
-  name: string;
-  initials: string;
-  ringColor: string;
-  style: string;
-  profit90d: number;
-  winRate: number;
-  followers: number;
-  coins: string[];
-};
+type DbTrader = Awaited<ReturnType<typeof getFeaturedLandingTraders>>[number];
 
-const TRADERS: Trader[] = [
-  { name: "Marcus Chen",     initials: "MC", ringColor: "#f7931a", style: "Swing Trader",       profit90d: 18.4, winRate: 76, followers: 2_847, coins: ["BTC", "ETH"] },
-  { name: "Sofia Navarro",   initials: "SN", ringColor: "#627eea", style: "BTC / ETH Focus",    profit90d: 24.1, winRate: 71, followers: 5_192, coins: ["BTC", "ETH", "SOL"] },
-  { name: "Daniel Reeves",   initials: "DR", ringColor: "#9945ff", style: "Altcoin Strategy",   profit90d: 31.7, winRate: 68, followers: 3_428, coins: ["SOL", "AVAX", "LINK"] },
-];
-
-function TradersSection() {
+function TradersSection({ traders, isSignedIn }: { traders: DbTrader[]; isSignedIn: boolean }) {
   return (
     <section id="traders" className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
       <div className="max-w-[1320px] mx-auto">
@@ -301,11 +295,11 @@ function TradersSection() {
           headingGold="Grow together."
           rightText="Past performance shown · Not a guarantee"
         />
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-          {TRADERS.map((t) => <TraderCard key={t.name} trader={t} />)}
+        <div className={`mt-12 grid gap-5 lg:gap-6 grid-cols-1 ${traders.length >= 3 ? "md:grid-cols-3" : traders.length === 2 ? "md:grid-cols-2" : ""}`}>
+          {traders.map((t) => <TraderCard key={t.id} trader={t} isSignedIn={isSignedIn} />)}
         </div>
         <p className="mt-8 text-[12px] text-slate-600 text-center max-w-xl mx-auto leading-relaxed">
-          All stats reflect the last 90 days. Crypto is volatile and past performance does not guarantee future results.
+          All stats are shown for information only. Crypto is volatile and past performance does not guarantee future results.
           You keep full control of your funds and can stop copying any time.
         </p>
       </div>
@@ -313,55 +307,67 @@ function TradersSection() {
   );
 }
 
-function TraderCard({ trader: t }: { trader: Trader }) {
+function initialsFrom(name: string): string {
+  return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
+}
+function ringColorFor(name: string): string {
+  const palette = ["#f7931a", "#627eea", "#9945ff", "#26a17b", "#f3ba2f", "#346aa9", "#e84142", "#2a5ada"];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return palette[h % palette.length];
+}
+
+function TraderCard({ trader: t, isSignedIn }: { trader: DbTrader; isSignedIn: boolean }) {
+  const ring = ringColorFor(t.name);
+  const initials = initialsFrom(t.name);
+  const perf = Number(t.performance30d);
+  const win  = Number(t.winRate);
+  const followers = t.followers;
+  const copyHref = isSignedIn ? `/dashboard/copy-trading?trader=${t.id}` : `/register?next=/dashboard/copy-trading?trader=${t.id}`;
+  const isPos = perf >= 0;
+
   return (
     <article className="chainviax-card-elite p-7">
       <div className="flex items-center gap-4">
-        <div className="relative w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-black text-white"
+        <div className="relative w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-black text-white overflow-hidden"
              style={{
-               background: `linear-gradient(145deg, ${t.ringColor}, ${t.ringColor}88)`,
-               boxShadow: `0 10px 24px ${t.ringColor}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
+               background: `linear-gradient(145deg, ${ring}, ${ring}88)`,
+               boxShadow: `0 10px 24px ${ring}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
              }}>
-          {t.initials}
+          {t.avatarUrl
+            ? <img src={t.avatarUrl} alt={t.name} className="w-full h-full object-cover" />
+            : <span>{initials || "?"}</span>}
           <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-amber-400 text-[10px] font-black text-[#1b1205] shadow-[0_4px_10px_rgba(244,196,64,0.6)]" title="Verified trader">✓</span>
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[16px] font-bold text-white truncate">{t.name}</div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-bold">{t.style}</div>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-bold truncate">
+            {t.specialty ?? "Crypto Trader"}
+          </div>
         </div>
       </div>
 
-      {/* 90d return + spark */}
+      {/* 30d return + spark */}
       <div className="mt-6 flex items-end justify-between gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 font-bold mb-1">90-Day Return</div>
-          <div className="text-[30px] font-bold text-emerald-400 tabular-nums tracking-tight leading-none">
-            +{t.profit90d.toFixed(1)}%
+          <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 font-bold mb-1">30-Day Return</div>
+          <div className={`text-[30px] font-bold tabular-nums tracking-tight leading-none ${isPos ? "text-emerald-400" : "text-red-400"}`}>
+            {isPos ? "+" : ""}{perf.toFixed(1)}%
           </div>
         </div>
-        <TraderSpark profit={t.profit90d} />
+        <TraderSpark profit={perf} />
       </div>
 
       {/* stats row */}
       <div className="mt-6 pt-5 border-t border-white/[0.06] grid grid-cols-3 gap-3">
-        <Stat big={`${t.winRate}%`} small="Win Rate" />
-        <Stat big={formatCompact(t.followers)} small="Followers" />
-        <Stat big={`${t.coins.length}`} small="Coins" />
+        <Stat big={`${win.toFixed(0)}%`} small="Win Rate" />
+        <Stat big={formatCompact(followers)} small="Followers" />
+        <Stat big={t.riskLevel} small="Risk" />
       </div>
 
-      {/* coins traded */}
-      <div className="mt-5 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-bold text-slate-500">
-        <span>Trades</span>
-        <div className="flex items-center gap-1.5">
-          {t.coins.map((c) => (
-            <span key={c} className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.06] text-slate-300">{c}</span>
-          ))}
-        </div>
-      </div>
-
-      <Link href="/register"
+      <Link href={copyHref}
             className="mt-6 chainviax-btn-outline-dark inline-flex w-full items-center justify-center gap-2 h-11 rounded-md text-[13px] font-bold hover:border-amber-500/40">
-        <Copy className="h-3.5 w-3.5" /> Copy Trader
+        <Copy className="h-3.5 w-3.5" /> {isSignedIn ? "Copy Trader" : "Sign in to Copy"}
       </Link>
     </article>
   );

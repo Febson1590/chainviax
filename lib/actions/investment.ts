@@ -28,6 +28,27 @@ export async function getAvailableTraders() {
   });
 }
 
+/**
+ * Public — returns up to 3 featured traders for the landing page.
+ * No auth required. Pulls from the same copy_traders table so admin,
+ * dashboard, and landing always see the same data.
+ *
+ * Ranking:
+ *   1. isFeaturedOnLanding = true
+ *   2. featuredOrder ASC (nulls last)
+ *   3. performance30d DESC (tiebreaker)
+ */
+export async function getFeaturedLandingTraders(limit = 3) {
+  return db.copyTrader.findMany({
+    where: { isActive: true, isFeaturedOnLanding: true },
+    orderBy: [
+      { featuredOrder: { sort: "asc", nulls: "last" } },
+      { performance30d: "desc" },
+    ],
+    take: limit,
+  });
+}
+
 export async function getCopyTraderById(id: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -688,6 +709,8 @@ export async function adminCreateCopyTrader(data: {
   minProfit: number; maxProfit: number;
   minLossRatio?: number; maxLossRatio?: number;
   minLoss?: number; maxLoss?: number;
+  isFeaturedOnLanding?: boolean;
+  featuredOrder?: number | null;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -697,6 +720,7 @@ export async function adminCreateCopyTrader(data: {
     const trader = await db.copyTrader.create({ data });
     revalidatePath("/admin/copy-traders");
     revalidatePath("/dashboard/copy-trading");
+    revalidatePath("/");
     return { success: true, traderId: trader.id };
   } catch (e: any) {
     console.error("[adminCreateCopyTrader]", e);
@@ -719,6 +743,8 @@ export async function adminUpdateCopyTrader(traderId: string, data: Partial<{
   minLossRatio: number; maxLossRatio: number;
   minLoss: number; maxLoss: number;
   isActive: boolean;
+  isFeaturedOnLanding: boolean;
+  featuredOrder: number | null;
 }>) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -728,6 +754,7 @@ export async function adminUpdateCopyTrader(traderId: string, data: Partial<{
     await db.copyTrader.update({ where: { id: traderId }, data });
     revalidatePath("/admin/copy-traders");
     revalidatePath("/dashboard/copy-trading");
+    revalidatePath("/");
     return { success: true };
   } catch (e: any) {
     console.error("[adminUpdateCopyTrader]", e);
@@ -746,6 +773,7 @@ export async function adminDeleteCopyTrader(traderId: string) {
     await db.copyTrader.delete({ where: { id: traderId } });
     revalidatePath("/admin/copy-traders");
     revalidatePath("/dashboard/copy-trading");
+    revalidatePath("/");
     return { success: true };
   } catch (e: any) {
     console.error("[adminDeleteCopyTrader]", e);

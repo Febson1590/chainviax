@@ -103,6 +103,8 @@ function TraderModal({ trader, onClose, onSuccess }: {
     maxLossRatio:     String(trader?.maxLossRatio ?? 0),
     minLoss:          String(trader?.minLoss ?? 0),
     maxLoss:          String(trader?.maxLoss ?? 0),
+    isFeaturedOnLanding: trader?.isFeaturedOnLanding ?? false,
+    featuredOrder:    trader?.featuredOrder != null ? String(trader.featuredOrder) : "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarUrl, setAvatarUrl] = useState<string | null>(trader?.avatarUrl ?? null);
@@ -194,6 +196,8 @@ function TraderModal({ trader, onClose, onSuccess }: {
         maxLossRatio:     parseFloat(form.maxLossRatio)  || 0,
         minLoss:          parseFloat(form.minLoss)       || 0,
         maxLoss:          parseFloat(form.maxLoss)       || 0,
+        isFeaturedOnLanding: form.isFeaturedOnLanding,
+        featuredOrder:    form.featuredOrder.trim() === "" ? null : (parseInt(form.featuredOrder) || null),
       };
       const r = trader
         ? await adminUpdateCopyTrader(trader.id, payload)
@@ -446,6 +450,38 @@ function TraderModal({ trader, onClose, onSuccess }: {
               Loss magnitude is a random % between Min Loss and Max Loss, applied to the copied amount.
               Back-to-back losses are capped at 2 in a row.
             </p>
+          </div>
+
+          {/* Landing-page featuring */}
+          <div className="rounded-xl p-4 border border-amber-500/25 bg-amber-500/[0.04]">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 w-4 h-4 accent-amber-400"
+                checked={form.isFeaturedOnLanding}
+                onChange={(e) => setForm((f) => ({ ...f, isFeaturedOnLanding: e.target.checked }))}
+              />
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold text-amber-200">Feature on landing page</div>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  The public home page shows up to 3 traders. If more than 3 are featured, the lowest <em>featured order</em> numbers win.
+                </p>
+              </div>
+            </label>
+            {form.isFeaturedOnLanding && (
+              <div className="mt-3 pl-7">
+                <label className={labelCls}>Featured order (optional)</label>
+                <input
+                  type="number"
+                  min={1}
+                  className={inputCls + " mt-1 w-32"}
+                  value={form.featuredOrder}
+                  onChange={(e) => set("featuredOrder", e.target.value)}
+                  placeholder="e.g. 1"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">Lower number appears first. Leave blank to rank by performance.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -815,6 +851,37 @@ export default function AdminCopyTradersPage() {
         ))}
       </div>
 
+      {/* ── Featured-on-landing summary ── */}
+      {tab === "traders" && (() => {
+        const featured = traders.filter(t => t.isFeaturedOnLanding && t.isActive);
+        const shown = [...featured].sort((a, b) => {
+          const ao = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+          const bo = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+          if (ao !== bo) return ao - bo;
+          return Number(b.performance30d) - Number(a.performance30d);
+        }).slice(0, 3);
+        const tone =
+          featured.length === 3 ? "border-emerald-500/25 bg-emerald-500/[0.04] text-emerald-300"
+          : featured.length === 0 ? "border-slate-500/20 bg-slate-500/[0.04] text-slate-400"
+          : featured.length > 3 ? "border-amber-500/25 bg-amber-500/[0.05] text-amber-300"
+          : "border-amber-500/25 bg-amber-500/[0.05] text-amber-300";
+        return (
+          <div className={`rounded-xl border px-4 py-3 text-[12.5px] flex flex-wrap items-center gap-x-3 gap-y-1.5 ${tone}`}>
+            <span className="font-semibold uppercase tracking-wider text-[10px]">Landing Page</span>
+            <span>
+              {featured.length === 0 ? "No traders are featured — the landing Top Traders section will stay hidden."
+                : featured.length > 3 ? `${featured.length} marked featured — landing will only show the 3 with the lowest featured order.`
+                : `${featured.length}/3 featured${featured.length < 3 ? " — add a few more to fill the row" : ""}.`}
+            </span>
+            {shown.length > 0 && (
+              <span className="text-slate-400 font-normal">
+                Showing: {shown.map(t => t.name).join(" · ")}
+              </span>
+            )}
+          </div>
+        );
+      })()}
+
       {/* ── Traders Table ── */}
       {tab === "traders" && (
         <div className="glass-card rounded-xl overflow-hidden">
@@ -882,6 +949,13 @@ export default function AdminCopyTradersPage() {
                                   >
                                     <Sparkles size={8} />
                                     Seeded
+                                  </span>
+                                )}
+                                {tr.isFeaturedOnLanding && (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-300"
+                                    title={`Featured on landing page${tr.featuredOrder != null ? ` · order ${tr.featuredOrder}` : ""}`}
+                                  >
+                                    ★ Featured{tr.featuredOrder != null ? ` #${tr.featuredOrder}` : ""}
                                   </span>
                                 )}
                               </div>

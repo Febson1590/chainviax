@@ -9,10 +9,10 @@ import { COMPANY, CONTACT } from "@/lib/company";
 /* ── Footer link structure ───────────────────────────────────────────── */
 const footerLinks: Record<string, { href: string; label: string; external?: boolean }[]> = {
   Platform: [
-    { href: "/markets",          label: "Markets"         },
-    { href: "/#trade-terminal",  label: "Trade Terminal"  },
-    { href: "/pricing",          label: "Fees & Pricing"  },
-    { href: "/register",         label: "Open Account"    },
+    { href: "/markets",   label: "Markets"       },
+    { href: "/#traders",  label: "Copy Trading"  },
+    { href: "/pricing",   label: "Fees & Pricing" },
+    { href: "/register",  label: "Open Account"  },
   ],
   Company: [
     { href: "/about",   label: "About Us" },

@@ -496,12 +496,17 @@ model CopyTrader {
   maxLoss         Decimal  @default(0) @db.Decimal(6, 4)
   isActive        Boolean  @default(true)
   isSeeded        Boolean  @default(false)               // true if auto-created by the default-seed action
+  /** Landing-page featuring. The public home page lists the top 3 traders
+      where isFeaturedOnLanding = true, sorted by featuredOrder asc (nulls last). */
+  isFeaturedOnLanding Boolean @default(false)
+  featuredOrder       Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   userCopyTrades  UserCopyTrade[]
 
   @@map("copy_traders")
+  @@index([isFeaturedOnLanding, featuredOrder])
 }
 
 model UserCopyTrade {
