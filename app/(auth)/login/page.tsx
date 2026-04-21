@@ -33,23 +33,24 @@ export default function LoginPage() {
       <BrandingPanel />
 
       {/* ═════════ RIGHT — FORM (desktop) / FULL COLUMN (mobile) ═════════ */}
-      <div className="w-full lg:w-1/2 flex flex-col relative">
-        {/* Mobile-only subtle background: candles top-right + gold streak + lock bottom */}
-        <MobileBackdrop />
-
-        {/* Mobile header: centered logo + eyebrow + title + subtitle */}
-        <div className="lg:hidden relative z-10 px-6 pt-12 pb-6 flex flex-col items-center text-center">
-          <Logo size="md" href="/" className="justify-center" />
-          <span className="mt-8 text-[14px] font-semibold tracking-wide chainviax-gold-text">Welcome Back</span>
-          <h1 className="mt-2 text-[28px] font-bold tracking-[-0.01em] text-white">
-            Log in to Chainviax
-          </h1>
-          <p className="mt-2 text-[14px] text-slate-400">
-            Access your account securely
-          </p>
+      <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen">
+        {/* Mobile-only subtle ambient glow (no chart clutter, no lock image) */}
+        <div aria-hidden className="lg:hidden pointer-events-none absolute inset-0 overflow-hidden z-0">
+          <div className="absolute top-[-160px] right-[-120px] w-[440px] h-[440px] rounded-full blur-[110px] opacity-45"
+               style={{ background: "radial-gradient(circle, rgba(244,196,64,0.30), transparent 65%)" }} />
+          <div className="absolute bottom-[-200px] left-[-100px] w-[380px] h-[380px] rounded-full blur-[120px] opacity-25"
+               style={{ background: "radial-gradient(circle, rgba(244,196,64,0.18), transparent 70%)" }} />
         </div>
 
-        <div className="relative z-10 flex-1 flex items-start lg:items-center justify-center px-5 sm:px-10 pb-10 pt-2 lg:py-14">
+        {/* Mobile header: logo + gold eyebrow only (title lives inside card) */}
+        <div className="lg:hidden relative z-10 px-6 pt-10 pb-4 flex flex-col items-center text-center">
+          <Logo size="md" href="/" className="justify-center" />
+          <span className="mt-5 text-[12px] font-bold tracking-[0.25em] uppercase chainviax-gold-text">
+            Welcome Back
+          </span>
+        </div>
+
+        <div className="relative z-10 flex-1 flex items-center justify-center px-5 sm:px-10 pb-10 pt-2 lg:py-14">
           {step === "credentials"
             ? <CredentialsCard
                 onSuccess={(email, pwd) => {
@@ -64,90 +65,8 @@ export default function LoginPage() {
                 onBack={() => setStep("credentials")}
               />}
         </div>
-
-        {/* Mobile-only: feature list below card + lock visual at bottom */}
-        <MobileFeaturesAndLock />
       </div>
     </div>
-  );
-}
-
-/* Mobile-only backdrop: candles top-right, gold streak left, subtle vignette */
-function MobileBackdrop() {
-  return (
-    <div aria-hidden className="lg:hidden pointer-events-none absolute inset-0 overflow-hidden z-0">
-      {/* Candles top right */}
-      <svg viewBox="0 0 200 260" preserveAspectRatio="none" className="absolute top-0 right-0 w-[45%] h-[240px] opacity-[0.22]">
-        {[
-          [15, 120, 40, 7, true],[35, 100, 30, 7, false],[55, 80, 50, 7, true],
-          [75, 95, 25, 7, false],[95, 60, 55, 7, true],[115, 75, 30, 7, false],
-          [135, 40, 55, 7, true],[155, 55, 35, 7, false],[180, 20, 45, 7, true],
-        ].map((c, i) => {
-          const [x, y, h, w, up] = c as [number, number, number, number, boolean];
-          return (
-            <g key={i}>
-              <line x1={x} y1={y-7} x2={x} y2={y+h+7} stroke={up ? "#f4c440" : "#8b6508"} strokeWidth="0.8" opacity="0.6" />
-              <rect x={x-w/2} y={y} width={w} height={h} rx="1"
-                    fill={up ? "rgba(244,196,64,0.55)" : "rgba(139,101,8,0.5)"} />
-            </g>
-          );
-        })}
-        <path d="M10,160 Q60,120 100,90 T180,30" stroke="#f4c440" strokeWidth="1" fill="none" opacity="0.5" />
-      </svg>
-      {/* Gold streak mid-left */}
-      <div className="absolute top-[32%] left-[-80px] w-[260px] h-[140px] rotate-[-8deg]"
-           style={{
-             background: "radial-gradient(ellipse 80% 50% at 30% 50%, rgba(244,196,64,0.35), transparent 70%)",
-             filter: "blur(22px)",
-           }} />
-    </div>
-  );
-}
-
-/* Mobile-only: feature list + bottom lock (hidden on desktop where the left panel has these) */
-function MobileFeaturesAndLock() {
-  return (
-    <div className="lg:hidden relative z-10 px-5 pb-[360px] sm:pb-[400px]">
-      <ul className="space-y-5 max-w-[420px] mx-auto">
-        <MobileFeature icon={<ShieldCheck className="h-5 w-5 text-amber-300" />} title="Bank-Level Security"
-                       desc="Your assets and data are protected with global security standards." />
-        <div className="h-px bg-white/[0.05]" />
-        <MobileFeature icon={<TrendingUp className="h-5 w-5 text-amber-300" />} title="Real-Time Insights"
-                       desc="Track the market and your portfolio with real-time data." />
-        <div className="h-px bg-white/[0.05]" />
-        <MobileFeature icon={<Users className="h-5 w-5 text-amber-300" />} title="Copy Top Traders"
-                       desc="Follow and copy expert traders automatically." />
-      </ul>
-      {/* Lock visual anchored bottom-right */}
-      <div aria-hidden className="absolute bottom-0 right-0 w-[58%] max-w-[260px] pointer-events-none">
-        <div className="absolute inset-0 -z-10"
-             style={{
-               background: "radial-gradient(ellipse 80% 50% at 50% 70%, rgba(244,196,64,0.35), transparent 70%)",
-               filter: "blur(30px)",
-             }} />
-        <Image src="/landing/login-lock.png" alt="" width={520} height={520}
-               className="w-full h-auto drop-shadow-[0_20px_40px_rgba(244,196,64,0.2)]"
-               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-      </div>
-    </div>
-  );
-}
-
-function MobileFeature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
-  return (
-    <li className="flex items-start gap-4">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-           style={{
-             background: "linear-gradient(145deg, rgba(244,196,64,0.18), rgba(139,101,8,0.04))",
-             border: "1px solid rgba(244,196,64,0.3)",
-           }}>
-        {icon}
-      </div>
-      <div>
-        <div className="text-[15px] font-bold text-white">{title}</div>
-        <div className="text-[13px] text-slate-400 leading-[1.5] mt-0.5">{desc}</div>
-      </div>
-    </li>
   );
 }
 
@@ -206,29 +125,31 @@ function BrandingPanel() {
         <span className="chainviax-eyebrow inline-flex items-center gap-2 uppercase">
           Welcome Back
         </span>
-        <h1 className="mt-6 text-[44px] xl:text-[56px] font-bold tracking-[-0.025em] leading-[1.02]">
-          <span className="block text-white">Access Your</span>
-          <span className="block text-white">Portfolio.</span>
-          <span className="block chainviax-gold-text">Trade Smarter.</span>
+        <h1 className="mt-7 font-bold tracking-[-0.035em] leading-[0.98]">
+          <span className="block text-[52px] xl:text-[68px] text-white">Access Your</span>
+          <span className="block text-[52px] xl:text-[68px] text-white">Portfolio.</span>
+          <span className="block text-[52px] xl:text-[68px] mt-1 chainviax-gold-text italic font-extrabold" style={{ fontStyle: "normal" }}>
+            Trade Smarter.
+          </span>
         </h1>
-        <p className="mt-6 text-[15px] text-slate-400 leading-[1.6] max-w-md">
+        <p className="mt-7 text-[15.5px] text-slate-400 leading-[1.65] max-w-md">
           Securely log in to manage your investments, track performance, and copy top traders.
         </p>
 
-        {/* Feature list */}
-        <ul className="mt-10 space-y-5">
+        {/* Feature list — lighter, cleaner */}
+        <ul className="mt-12 space-y-[18px]">
           <Feature
-            icon={<ShieldCheck className="h-5 w-5 text-amber-300" />}
+            icon={<ShieldCheck className="h-[18px] w-[18px] text-amber-300" />}
             title="Bank-Level Security"
             desc="Your assets and data are protected with global security standards."
           />
           <Feature
-            icon={<TrendingUp className="h-5 w-5 text-amber-300" />}
+            icon={<TrendingUp className="h-[18px] w-[18px] text-amber-300" />}
             title="Real-Time Insights"
             desc="Track the market and your portfolio with real-time data."
           />
           <Feature
-            icon={<Users className="h-5 w-5 text-amber-300" />}
+            icon={<Users className="h-[18px] w-[18px] text-amber-300" />}
             title="Copy Top Traders"
             desc="Follow and copy expert traders automatically."
           />
@@ -249,17 +170,16 @@ function BrandingPanel() {
 function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <li className="flex items-start gap-4">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+      <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5"
            style={{
-             background: "linear-gradient(145deg, rgba(244,196,64,0.18), rgba(139,101,8,0.03))",
-             border: "1px solid rgba(244,196,64,0.35)",
-             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1)",
+             background: "linear-gradient(145deg, rgba(244,196,64,0.10), rgba(139,101,8,0.02))",
+             border: "1px solid rgba(244,196,64,0.22)",
            }}>
         {icon}
       </div>
       <div>
-        <div className="text-[15px] font-bold text-white">{title}</div>
-        <div className="text-[13px] text-slate-400 leading-[1.5] mt-0.5">{desc}</div>
+        <div className="text-[14px] font-semibold text-white tracking-tight">{title}</div>
+        <div className="text-[12.5px] text-slate-500 leading-[1.55] mt-1">{desc}</div>
       </div>
     </li>
   );
@@ -267,21 +187,22 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
 
 function LockVisual() {
   return (
-    <div aria-hidden className="absolute bottom-0 left-0 w-full pointer-events-none z-[2]">
-      {/* gold streak beneath lock */}
-      <div className="absolute bottom-16 left-0 right-0 h-[80px]"
+    <div aria-hidden className="absolute bottom-4 left-4 xl:left-10 w-full pointer-events-none z-[2]">
+      {/* soft gold glow beneath lock */}
+      <div className="absolute bottom-6 left-0 w-[320px] h-[80px]"
            style={{
-             background: "radial-gradient(ellipse 70% 100% at 30% 60%, rgba(244,196,64,0.25), transparent 70%)",
-             filter: "blur(20px)",
+             background: "radial-gradient(ellipse 60% 100% at 40% 50%, rgba(244,196,64,0.22), transparent 70%)",
+             filter: "blur(28px)",
            }} />
-      <div className="relative w-[320px] xl:w-[360px] mx-auto xl:ml-6 pb-2">
+      <div className="relative w-[180px] xl:w-[220px] opacity-70">
         <Image
           src="/landing/login-lock.png"
           alt=""
-          width={720}
-          height={720}
+          width={540}
+          height={540}
           priority
-          className="w-full h-auto opacity-95 drop-shadow-[0_30px_60px_rgba(244,196,64,0.25)] select-none"
+          className="w-full h-auto drop-shadow-[0_20px_40px_rgba(244,196,64,0.18)] select-none"
+          style={{ maskImage: "linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 100%)", WebkitMaskImage: "linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 100%)" }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
         />
       </div>
@@ -314,59 +235,60 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
   };
 
   return (
-    <div className="w-full max-w-[460px] chainviax-login-card p-8 sm:p-10">
-      <h2 className="text-[28px] font-bold text-white text-center tracking-[-0.01em]">
+    <div className="w-full max-w-[460px] chainviax-login-card p-9 sm:p-11">
+      <h2 className="text-[26px] sm:text-[28px] font-bold text-white text-center tracking-[-0.01em]">
         Log in to Chainviax
       </h2>
-      <p className="mt-2 text-[14px] text-slate-400 text-center">
+      <p className="mt-2.5 text-[13.5px] text-slate-400 text-center">
         Enter your details to continue to your account.
       </p>
 
       {error && (
-        <div className="mt-6 flex items-center gap-2.5 text-sm text-red-300 bg-red-500/10 border border-red-500/25 rounded-lg px-4 py-3">
+        <div className="mt-6 flex items-center gap-2.5 text-[13px] text-red-300 bg-red-500/10 border border-red-500/25 rounded-lg px-4 py-3">
           <AlertCircle size={15} className="flex-shrink-0" />
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-[22px]">
         <div>
-          <label className="block text-[13px] font-semibold text-white mb-2">Email Address</label>
+          <label className="block text-[12.5px] font-semibold text-slate-300 mb-2.5 tracking-wide">Email Address</label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
             <input
               {...register("email")}
               type="email"
               placeholder="Enter your email"
-              className="chainviax-login-input w-full pl-10 pr-3 h-[52px] rounded-[10px] text-[14px] text-white placeholder:text-slate-600"
+              className="chainviax-login-input w-full pl-[46px] pr-4 h-[56px] rounded-[12px] text-[14.5px]"
             />
           </div>
-          {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
+          {errors.email && <p className="mt-2 text-xs text-red-400">{errors.email.message}</p>}
         </div>
 
         <div>
-          <label className="block text-[13px] font-semibold text-white mb-2">Password</label>
+          <label className="block text-[12.5px] font-semibold text-slate-300 mb-2.5 tracking-wide">Password</label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
-              className="chainviax-login-input w-full pl-10 pr-11 h-[52px] rounded-[10px] text-[14px] text-white placeholder:text-slate-600"
+              className="chainviax-login-input w-full pl-[46px] pr-12 h-[56px] rounded-[12px] text-[14.5px]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300 transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
-          {errors.password && <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>}
+          {errors.password && <p className="mt-2 text-xs text-red-400">{errors.password.message}</p>}
         </div>
 
-        <div className="flex justify-end">
-          <Link href="/contact" className="text-[12.5px] font-semibold text-amber-300 hover:text-amber-200">
+        <div className="flex justify-end pt-1">
+          <Link href="/contact" className="text-[12.5px] font-semibold text-amber-300 hover:text-amber-200 transition-colors">
             Forgot password?
           </Link>
         </div>
@@ -374,7 +296,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
         <button
           type="submit"
           disabled={loading}
-          className="chainviax-btn-gold w-full h-[52px] rounded-[10px] text-[14px] font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
+          className="chainviax-btn-gold w-full h-[56px] rounded-[12px] text-[14.5px] font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin" /> Signing in…</>
@@ -382,7 +304,7 @@ function CredentialsCard({ onSuccess }: { onSuccess: (email: string, pwd: string
         </button>
       </form>
 
-      <p className="mt-7 text-center text-[13px] text-slate-500">
+      <p className="mt-8 text-center text-[13px] text-slate-500">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="text-amber-300 hover:text-amber-200 font-semibold">
           Sign up
