@@ -1,15 +1,18 @@
 import Link from "next/link";
 import {
-  ArrowRight, ShieldCheck, Zap, LineChart,
-  Wallet, UserPlus, BadgeCheck,
+  ArrowRight, ShieldCheck, TrendingUp, Repeat, Wallet, Users,
+  UserPlus, BadgeCheck, Copy, Activity,
 } from "lucide-react";
 import { getMarketAssets, type MarketAsset } from "@/lib/coingecko";
 import { formatCurrency, formatCompact } from "@/lib/utils";
-import { LiveHeroPrice, LivePriceStrip, LiveMarketCards, LiveMarketTable } from "@/components/public/live-landing";
+import {
+  LiveHeroPrice, LivePriceStrip, LiveMarketCards, LiveMarketTable,
+} from "@/components/public/live-landing";
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Chainviax — premium crypto broker landing page
-   Clean hero · live prices · markets · terminal · why us · how it works · trust · CTA
+   Chainviax — invest + copy-trading landing page
+   Hero · live prices · two ways to invest · top traders · markets
+   · features · how it works · trust · CTA
    ═══════════════════════════════════════════════════════════════════════ */
 
 export default async function HomePage() {
@@ -22,9 +25,10 @@ export default async function HomePage() {
       <AmbientGlow />
       <Hero initial={markets} btc={btc} />
       <LivePricesSection initial={markets} />
+      <TwoWaysSection />
+      <TradersSection />
       <MarketsSection initial={markets} />
-      <TerminalSection btc={btc} />
-      <WhySection />
+      <FeaturesRow />
       <HowItWorks />
       <TrustStrip totalVolume={totalVolume} />
       <ClosingCTA />
@@ -32,14 +36,14 @@ export default async function HomePage() {
   );
 }
 
-/* ═══ ambient glow (single layer, no heavy fixed image) ════════════════ */
+/* ═══ ambient glow ═════════════════════════════════════════════════════ */
 
 function AmbientGlow() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       <div className="absolute top-[-200px] right-[-200px] w-[800px] h-[800px] rounded-full blur-[150px] opacity-40"
            style={{ background: "radial-gradient(circle, rgba(244,196,64,0.28), transparent 65%)" }} />
-      <div className="absolute top-[800px] left-[-300px] w-[700px] h-[700px] rounded-full blur-[150px] opacity-20"
+      <div className="absolute top-[1400px] left-[-300px] w-[700px] h-[700px] rounded-full blur-[150px] opacity-20"
            style={{ background: "radial-gradient(circle, rgba(244,196,64,0.18), transparent 70%)" }} />
     </div>
   );
@@ -53,48 +57,42 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
   const low24  = price * 0.986;
 
   return (
-    <section className="relative z-10 pt-28 md:pt-36 pb-20 md:pb-32 px-5 sm:px-8 lg:px-12">
+    <section className="relative z-10 pt-28 md:pt-36 pb-20 md:pb-28 px-5 sm:px-8 lg:px-12">
       <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] gap-14 lg:gap-16 items-center">
-        {/* left */}
         <div className="relative max-w-2xl">
           <div className="chainviax-eyebrow inline-flex items-center gap-2 mb-9">
-            <span className="chainviax-dot" /> Crypto Broker You Can Trust
+            <span className="chainviax-dot" /> Crypto Trading & Copy Investing
           </div>
-          <h1 className="font-bold tracking-[-0.025em] text-[60px] sm:text-[80px] lg:text-[104px] leading-[0.92]">
-            <span className="block text-white">Buy and Sell</span>
-            <span className="block chainviax-gold-text">Crypto Easily.</span>
+          <h1 className="font-bold tracking-[-0.025em] text-[56px] sm:text-[76px] lg:text-[100px] leading-[0.94]">
+            <span className="block text-white">Invest in Crypto</span>
+            <span className="block chainviax-gold-text">Your Way.</span>
           </h1>
           <p className="mt-8 text-[17px] sm:text-[18px] text-slate-300/90 leading-[1.55] max-w-lg">
-            Trade Bitcoin, Ethereum, and 90+ coins in one place.
-            <span className="block mt-1 text-slate-400/80 text-[15px]">Simple. Fast. Safe.</span>
+            Trade on your own, or copy top traders and let your account follow theirs.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
             <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[56px] px-10 rounded-[10px] text-[14px] font-bold tracking-wide">
-              Start Trading <ArrowRight className="h-4 w-4" />
+              Start Investing <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/markets" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
-              View Prices
+            <Link href="#traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[56px] px-8 rounded-[10px] text-[14px] font-semibold">
+              Explore Traders
             </Link>
           </div>
-          {/* Inline trust row with divider */}
           <div className="mt-10 pt-6 border-t border-white/[0.06] flex flex-wrap items-center gap-x-8 gap-y-2 text-[11px] uppercase tracking-[0.22em] text-slate-500">
             <span>Safe storage</span>
             <span className="h-1 w-1 rounded-full bg-amber-500/60" />
             <span>Live 24/7</span>
             <span className="h-1 w-1 rounded-full bg-amber-500/60" />
-            <span>No hidden fees</span>
+            <span>Withdraw anytime</span>
           </div>
         </div>
 
-        {/* right — clean trading panel, no decorative coins */}
+        {/* clean trading panel — no floating decorative coins */}
         <div className="relative w-full">
-          {/* soft ambient gold glow behind panel */}
           <div aria-hidden className="absolute -inset-6 -z-10 blur-[100px] opacity-60"
                style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(244,196,64,0.22), transparent 70%)" }} />
 
-          {/* main trading card */}
-          <div className="relative w-full chainviax-card-elite overflow-hidden">
-            {/* window chrome */}
+          <div className="relative chainviax-card-elite overflow-hidden">
             <div className="flex items-center justify-between px-6 h-12 border-b border-white/[0.06] bg-black/30">
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#1f1f24]" />
@@ -108,7 +106,6 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
               </span>
             </div>
 
-            {/* price + stats row */}
             <div className="flex items-start justify-between px-6 pt-5">
               <LiveHeroPrice initial={initial} />
               <div className="hidden sm:flex items-center gap-5 text-right">
@@ -123,7 +120,6 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
               </div>
             </div>
 
-            {/* timeframe tabs */}
             <div className="flex items-center justify-between px-6 pt-4">
               <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold">
                 {["1H","4H","1D","1W","1M"].map((t,i) => (
@@ -133,12 +129,10 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
               <div className="text-[10px] uppercase tracking-widest text-slate-600 font-bold">Candles · 5m</div>
             </div>
 
-            {/* chart */}
             <div className="relative h-[240px] sm:h-[280px] lg:h-[320px] mt-2">
               <HeroChart />
             </div>
 
-            {/* volume bars strip */}
             <div className="relative h-[48px] border-t border-white/[0.06] flex items-end justify-between gap-0.5 px-6 pt-2 pb-2">
               {Array.from({ length: 40 }).map((_, i) => {
                 const h = 8 + Math.abs(Math.sin(i * 1.6) * 28) + (i % 5 === 0 ? 12 : 0);
@@ -150,7 +144,6 @@ function Hero({ initial, btc }: { initial: MarketAsset[]; btc?: MarketAsset }) {
               <div className="absolute right-6 top-2 text-[9px] uppercase tracking-widest text-slate-600 font-bold">Volume</div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -205,15 +198,211 @@ function HeroChart() {
   );
 }
 
-/* ═══ LIVE PRICES — polls /api/markets/public every 30s ═══════════════ */
+/* ═══ LIVE PRICES ══════════════════════════════════════════════════════ */
 
 function LivePricesSection({ initial }: { initial: MarketAsset[] }) {
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 pb-6">
-      <div className="max-w-[1280px] mx-auto chainviax-hairline-bar">
+      <div className="max-w-[1320px] mx-auto chainviax-hairline-bar">
         <LivePriceStrip initial={initial} symbols={["BTC", "ETH", "SOL", "USDT"]} />
       </div>
     </section>
+  );
+}
+
+/* ═══ TWO WAYS TO INVEST ═══════════════════════════════════════════════ */
+
+function TwoWaysSection() {
+  return (
+    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
+      <div className="max-w-[1320px] mx-auto">
+        <SectionHeading
+          eyebrow="Two Ways"
+          headingLead="Choose how you"
+          headingGold="want to invest."
+        />
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-0 relative">
+          <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+          {/* Trade yourself */}
+          <div className="p-10 md:pr-14 border-b md:border-b-0 md:border-r border-white/[0.06]">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                 style={{
+                   background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
+                   border: "1px solid rgba(244,196,64,0.4)",
+                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                 }}>
+              <TrendingUp className="h-5 w-5 text-amber-300" />
+            </div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80 font-bold mb-3">Trade Yourself</div>
+            <h3 className="text-[28px] sm:text-[32px] font-bold tracking-tight leading-[1.1] mb-4">
+              Buy and sell any coin, any time.
+            </h3>
+            <p className="text-[15px] text-slate-400 leading-[1.6] max-w-md mb-6">
+              Open the charts, place a market or limit order, and watch it fill in seconds.
+            </p>
+            <Link href="/markets" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
+              View Markets <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          {/* Copy a trader */}
+          <div className="p-10 md:pl-14">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                 style={{
+                   background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
+                   border: "1px solid rgba(244,196,64,0.4)",
+                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                 }}>
+              <Copy className="h-5 w-5 text-amber-300" />
+            </div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80 font-bold mb-3">Copy a Trader</div>
+            <h3 className="text-[28px] sm:text-[32px] font-bold tracking-tight leading-[1.1] mb-4">
+              Let a top trader invest for you.
+            </h3>
+            <p className="text-[15px] text-slate-400 leading-[1.6] max-w-md mb-6">
+              Pick a trader with a strong track record. Your account follows every trade they make.
+            </p>
+            <Link href="#traders" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
+              Browse Traders <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="absolute -bottom-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══ TOP TRADERS ══════════════════════════════════════════════════════ */
+
+type Trader = {
+  name: string;
+  initials: string;
+  ringColor: string;
+  style: string;
+  profit90d: number;
+  winRate: number;
+  followers: number;
+  coins: string[];
+};
+
+const TRADERS: Trader[] = [
+  { name: "Marcus Chen",     initials: "MC", ringColor: "#f7931a", style: "Swing Trader",       profit90d: 18.4, winRate: 76, followers: 2_847, coins: ["BTC", "ETH"] },
+  { name: "Sofia Navarro",   initials: "SN", ringColor: "#627eea", style: "BTC / ETH Focus",    profit90d: 24.1, winRate: 71, followers: 5_192, coins: ["BTC", "ETH", "SOL"] },
+  { name: "Daniel Reeves",   initials: "DR", ringColor: "#9945ff", style: "Altcoin Strategy",   profit90d: 31.7, winRate: 68, followers: 3_428, coins: ["SOL", "AVAX", "LINK"] },
+];
+
+function TradersSection() {
+  return (
+    <section id="traders" className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
+      <div className="max-w-[1320px] mx-auto">
+        <SectionHeading
+          eyebrow="Top Traders"
+          headingLead="Copy a trader."
+          headingGold="Grow together."
+          rightText="Past performance shown · Not a guarantee"
+        />
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+          {TRADERS.map((t) => <TraderCard key={t.name} trader={t} />)}
+        </div>
+        <p className="mt-8 text-[12px] text-slate-600 text-center max-w-xl mx-auto leading-relaxed">
+          All stats reflect the last 90 days. Crypto is volatile and past performance does not guarantee future results.
+          You keep full control of your funds and can stop copying any time.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function TraderCard({ trader: t }: { trader: Trader }) {
+  return (
+    <article className="chainviax-card-elite p-7">
+      <div className="flex items-center gap-4">
+        <div className="relative w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-black text-white"
+             style={{
+               background: `linear-gradient(145deg, ${t.ringColor}, ${t.ringColor}88)`,
+               boxShadow: `0 10px 24px ${t.ringColor}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
+             }}>
+          {t.initials}
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-amber-400 text-[10px] font-black text-[#1b1205] shadow-[0_4px_10px_rgba(244,196,64,0.6)]" title="Verified trader">✓</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[16px] font-bold text-white truncate">{t.name}</div>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-bold">{t.style}</div>
+        </div>
+      </div>
+
+      {/* 90d return + spark */}
+      <div className="mt-6 flex items-end justify-between gap-4">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 font-bold mb-1">90-Day Return</div>
+          <div className="text-[30px] font-bold text-emerald-400 tabular-nums tracking-tight leading-none">
+            +{t.profit90d.toFixed(1)}%
+          </div>
+        </div>
+        <TraderSpark profit={t.profit90d} />
+      </div>
+
+      {/* stats row */}
+      <div className="mt-6 pt-5 border-t border-white/[0.06] grid grid-cols-3 gap-3">
+        <Stat big={`${t.winRate}%`} small="Win Rate" />
+        <Stat big={formatCompact(t.followers)} small="Followers" />
+        <Stat big={`${t.coins.length}`} small="Coins" />
+      </div>
+
+      {/* coins traded */}
+      <div className="mt-5 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-bold text-slate-500">
+        <span>Trades</span>
+        <div className="flex items-center gap-1.5">
+          {t.coins.map((c) => (
+            <span key={c} className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.06] text-slate-300">{c}</span>
+          ))}
+        </div>
+      </div>
+
+      <Link href="/register"
+            className="mt-6 chainviax-btn-outline-dark inline-flex w-full items-center justify-center gap-2 h-11 rounded-md text-[13px] font-bold hover:border-amber-500/40">
+        <Copy className="h-3.5 w-3.5" /> Copy Trader
+      </Link>
+    </article>
+  );
+}
+
+function Stat({ big, small }: { big: string; small: string }) {
+  return (
+    <div>
+      <div className="text-[16px] font-bold text-white tabular-nums">{big}</div>
+      <div className="text-[9.5px] uppercase tracking-[0.22em] text-slate-500 font-bold mt-0.5">{small}</div>
+    </div>
+  );
+}
+
+function TraderSpark({ profit }: { profit: number }) {
+  // synthesize a gently rising curve that ends at the stated profit
+  const N = 16;
+  const pts = Array.from({ length: N }, (_, i) => {
+    const t = i / (N - 1);
+    const trend = t * profit;
+    const wobble = Math.sin(i * 1.7 + profit) * (Math.abs(profit) * 0.04);
+    return trend + wobble;
+  });
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
+  const W = 110, H = 40, pad = 4;
+  const xs = pts.map((_, i) => pad + (i * (W - 2 * pad)) / (N - 1));
+  const ys = pts.map((v) => H - pad - ((v - min) / (max - min || 1)) * (H - 2 * pad));
+  const d = xs.map((x, i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+  const da = `${d} L${(W - pad).toFixed(1)},${H} L${pad},${H} Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="shrink-0">
+      <defs>
+        <linearGradient id={`tg-${profit}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#10b981" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={da} fill={`url(#tg-${profit})`} />
+      <path d={d} stroke="#10b981" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -222,17 +411,16 @@ function LivePricesSection({ initial }: { initial: MarketAsset[] }) {
 function MarketsSection({ initial }: { initial: MarketAsset[] }) {
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-20 md:py-24">
-      <div className="max-w-[1280px] mx-auto">
+      <div className="max-w-[1320px] mx-auto">
         <SectionHeading
           eyebrow="Live Prices"
-          headingLead="Buy and sell crypto"
-          headingGold="in seconds."
+          headingLead="Trade any coin"
+          headingGold="at live prices."
           rightLink={{ href: "/markets", label: "View all" }}
         />
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
           <LiveMarketCards initial={initial} symbols={["BTC", "ETH", "USDT"]} />
         </div>
-        {/* expanded live market table — real trading interface feel */}
         <div className="mt-8">
           <LiveMarketTable initial={initial} symbols={["SOL", "BNB", "XRP", "DOGE", "AVAX", "LINK"]} />
         </div>
@@ -241,161 +429,33 @@ function MarketsSection({ initial }: { initial: MarketAsset[] }) {
   );
 }
 
-/* ═══ TERMINAL ═════════════════════════════════════════════════════════ */
+/* ═══ FEATURES ═════════════════════════════════════════════════════════ */
 
-function TerminalSection({ btc }: { btc?: MarketAsset }) {
-  const price  = btc?.price ?? 43582.21;
-  const change = btc?.change ?? 2.34;
-  const isUp   = change >= 0;
-
-  const asks = [12.5, 18.2, 24.1, 31.8, 38.4, 45.0].map((o, i) => ({ p: price + o, a: 0.2 + i * 0.31, t: (price + o) * (0.2 + i * 0.31) }));
-  const bids = [11.9, 17.6, 23.5, 30.2, 37.8, 44.4].map((o, i) => ({ p: price - o, a: 0.18 + i * 0.29, t: (price - o) * (0.18 + i * 0.29) }));
-
-  return (
-    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-20 md:py-24">
-      <div className="max-w-[1280px] mx-auto">
-        <SectionHeading
-          eyebrow="Trading"
-          headingLead="Real charts."
-          headingGold="Real prices."
-          rightText="Live prices · Real orders · Fast trades"
-        />
-        <div className="mt-10 chainviax-card-elite overflow-hidden">
-          <div className="flex items-center justify-between px-6 h-12 border-b border-white/[0.06] bg-black/30">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#1a1a1f]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#1a1a1f]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#1a1a1f]" />
-              <span className="ml-4 text-[11px] uppercase tracking-[0.22em] text-slate-500 font-bold">chainviax.com / trade</span>
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-slate-400">
-              <span className="inline-flex items-center gap-1 text-amber-300/90">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
-              </span>
-              <span className="text-slate-600">|</span>
-              <span>BTC / USD</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,0.85fr)] min-h-[440px]">
-            {/* chart */}
-            <div className="border-r border-white/[0.06] p-5">
-              <div className="flex items-baseline gap-3">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 font-bold">BTC / USD</span>
-                <span className="text-[26px] sm:text-[30px] font-bold text-white tabular-nums">{formatCurrency(price)}</span>
-                <span className={`text-[12px] font-bold tabular-nums ${isUp ? "text-emerald-400" : "text-red-400"}`}>
-                  {isUp ? "+" : "−"}{Math.abs(change).toFixed(2)}%
-                </span>
-              </div>
-              <div className="relative mt-4 h-[330px]">
-                <HeroChart />
-              </div>
-            </div>
-
-            {/* book */}
-            <div className="border-r border-white/[0.06] p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500 font-bold">Order Book</span>
-                <span className="text-[10px] text-slate-600 uppercase tracking-widest">Spread · $24</span>
-              </div>
-              <div className="mt-3 grid grid-cols-3 text-[9px] uppercase tracking-[0.18em] text-slate-600 font-bold">
-                <span>Price</span><span className="text-right">Size</span><span className="text-right">Total</span>
-              </div>
-              <div className="mt-1">
-                {asks.slice().reverse().map((r, i) => <BookRow key={"a"+i} p={r.p} a={r.a} t={r.t} side="ask" />)}
-              </div>
-              <div className="my-2 flex items-center justify-between px-2 py-1.5 rounded bg-amber-500/10 border border-amber-500/20">
-                <span className="text-[13px] font-bold tabular-nums text-amber-300">{formatCurrency(price)}</span>
-                <span className="text-[9px] uppercase tracking-widest text-amber-300/80 font-bold">Last</span>
-              </div>
-              <div>
-                {bids.map((r, i) => <BookRow key={"b"+i} p={r.p} a={r.a} t={r.t} side="bid" />)}
-              </div>
-            </div>
-
-            {/* form */}
-            <div className="p-5">
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-4">
-                <button className="h-9 rounded-md text-[12px] font-bold bg-emerald-500/90 text-white">Buy</button>
-                <button className="h-9 rounded-md text-[12px] font-bold text-slate-400">Sell</button>
-              </div>
-              <div className="space-y-3">
-                <Field label="Price (USD)"  value={formatCurrency(price)} />
-                <Field label="Amount (BTC)" value="0.25000" />
-                <Field label="Total (USD)"  value={formatCurrency(price * 0.25)} accent />
-              </div>
-              <div className="mt-4 grid grid-cols-4 gap-1">
-                {["25%","50%","75%","MAX"].map(q => (
-                  <button key={q} className="h-8 rounded-md text-[10px] font-bold text-slate-400 bg-white/[0.02] border border-white/[0.06]">{q}</button>
-                ))}
-              </div>
-              <button className="chainviax-btn-gold w-full h-12 mt-5 rounded-lg text-[13px] font-bold">Buy Bitcoin</button>
-              <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Available</span>
-                <span className="text-[12px] text-slate-300 font-bold tabular-nums">$25,480.00</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function BookRow({ p, a, t, side }: { p: number; a: number; t: number; side: "ask" | "bid" }) {
-  const pct = Math.min(100, (a / 3) * 100);
-  return (
-    <div className="relative grid grid-cols-3 py-[3px] text-[11px] tabular-nums">
-      <div aria-hidden className="absolute inset-y-0 right-0 rounded-sm"
-           style={{ width: `${pct}%`, background: side === "ask" ? "rgba(239,68,68,0.10)" : "rgba(16,185,129,0.10)" }} />
-      <span className={`relative font-semibold ${side === "ask" ? "text-red-400" : "text-emerald-400"}`}>{formatCurrency(p)}</span>
-      <span className="relative text-right text-slate-400">{a.toFixed(3)}</span>
-      <span className="relative text-right text-slate-600">{formatCompact(t)}</span>
-    </div>
-  );
-}
-
-function Field({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className={`rounded-lg border ${accent ? "border-amber-500/30 bg-amber-500/[0.04]" : "border-white/[0.06] bg-white/[0.02]"} px-3 py-2.5`}>
-      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{label}</div>
-      <div className={`mt-0.5 text-[14px] font-bold tabular-nums ${accent ? "text-amber-300" : "text-white"}`}>{value}</div>
-    </div>
-  );
-}
-
-/* ═══ WHY ══════════════════════════════════════════════════════════════ */
-
-function WhySection() {
+function FeaturesRow() {
   const items = [
-    { icon: Zap,         n: "01", title: "Fair Prices",   desc: "You pay the real market price. No hidden fees." },
-    { icon: ShieldCheck, n: "02", title: "Safe Storage",  desc: "Your crypto is kept offline and watched 24/7." },
-    { icon: LineChart,   n: "03", title: "Simple Trading", desc: "Clean charts and one-tap orders anyone can use." },
+    { icon: Users,       title: "Copy Expert Traders", desc: "Follow top traders and match their trades in one tap." },
+    { icon: Activity,    title: "Track Performance",   desc: "See your profit, loss, and history in a clean dashboard." },
+    { icon: Wallet,      title: "Withdraw Anytime",    desc: "Your money is yours. Pull it out whenever you want." },
+    { icon: ShieldCheck, title: "Secure Your Account", desc: "Email codes on every sign-in. Most crypto kept offline." },
   ];
   return (
-    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
+    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-28">
       <div className="max-w-[1320px] mx-auto">
-        <SectionHeading eyebrow="Why Chainviax" headingLead="Made for" headingGold="real people." />
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 relative">
-          {/* top + bottom hairlines */}
+        <SectionHeading eyebrow="What You Get" headingLead="Everything you need" headingGold="to invest." />
+        <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 relative">
           <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/25 to-transparent" />
-          <div className="absolute -bottom-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
           {items.map((f, i) => (
-            <div key={f.title} className={`py-10 px-2 md:px-8 relative ${i > 0 ? "md:border-l border-white/[0.06]" : ""}`}>
-              <div className="flex items-center gap-4 mb-5">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                     style={{
-                       background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
-                       border: "1px solid rgba(244,196,64,0.4)",
-                       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(244,196,64,0.15)",
-                     }}>
-                  <f.icon className="h-5 w-5 text-amber-300" />
-                </div>
-                <span className="chainviax-gold-text text-[34px] font-bold tabular-nums leading-none">{f.n}</span>
+            <div key={f.title}
+                 className={`py-9 px-8 ${i > 0 ? "lg:border-l border-white/[0.06]" : ""} ${i === 1 ? "sm:border-l lg:border-l" : ""} ${i === 3 ? "sm:border-l" : ""} ${i >= 2 ? "border-t sm:border-t-0 lg:border-t-0 border-white/[0.06]" : ""} ${i === 2 ? "sm:border-t" : ""}`}>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                   style={{
+                     background: "linear-gradient(145deg, rgba(244,196,64,0.22), rgba(139,101,8,0.04))",
+                     border: "1px solid rgba(244,196,64,0.4)",
+                   }}>
+                <f.icon className="h-5 w-5 text-amber-300" />
               </div>
-              <h3 className="text-[22px] sm:text-[24px] font-bold text-white mb-3 tracking-tight">{f.title}</h3>
-              <p className="text-[14.5px] text-slate-400 leading-[1.6] max-w-sm">{f.desc}</p>
-              <div className="mt-6 h-px w-16 bg-gradient-to-r from-amber-500 to-amber-500/0" />
+              <h3 className="text-[17px] font-bold text-white mb-2">{f.title}</h3>
+              <p className="text-[13.5px] text-slate-400 leading-[1.6]">{f.desc}</p>
             </div>
           ))}
         </div>
@@ -408,22 +468,20 @@ function WhySection() {
 
 function HowItWorks() {
   const steps = [
-    { n: "01", icon: UserPlus,   title: "Sign Up",       desc: "Use your email to open a free account." },
-    { n: "02", icon: BadgeCheck, title: "Verify ID",     desc: "Send us a photo of your ID. Most are approved today." },
-    { n: "03", icon: Wallet,     title: "Add & Trade",   desc: "Add money and buy your first coin in one tap." },
+    { n: "01", icon: UserPlus,   title: "Sign Up",         desc: "Open a free account with just your email." },
+    { n: "02", icon: BadgeCheck, title: "Add Money",       desc: "Deposit a small amount to get started. No minimum." },
+    { n: "03", icon: Repeat,     title: "Trade or Copy",   desc: "Buy a coin yourself, or pick a trader to copy." },
   ];
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-32">
       <div className="max-w-[1320px] mx-auto">
-        <SectionHeading eyebrow="Get Started" headingLead="Start trading" headingGold="in 3 steps." />
+        <SectionHeading eyebrow="Get Started" headingLead="Start investing" headingGold="in 3 steps." />
         <div className="mt-14 relative">
-          {/* continuous dashed gold path */}
           <div aria-hidden className="hidden md:block absolute top-9 left-[10%] right-[10%] h-px"
                style={{ backgroundImage: "linear-gradient(90deg, rgba(244,196,64,0.4) 50%, transparent 0)", backgroundSize: "10px 1px" }} />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
             {steps.map((s) => (
               <div key={s.n} className="relative flex flex-col items-start md:items-center md:text-center">
-                {/* numbered ring */}
                 <div className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6"
                      style={{
                        background: "radial-gradient(circle at 35% 30%, rgba(244,196,64,0.35), rgba(139,101,8,0.12) 70%)",
@@ -450,12 +508,12 @@ function TrustStrip({ totalVolume }: { totalVolume: number }) {
   const items = [
     { big: `$${formatCompact(totalVolume || 8_755_342_108)}`, small: "Traded Today" },
     { big: "98+",    small: "Coins to Trade" },
-    { big: "0.05%",  small: "Low Fees" },
+    { big: "1,200+", small: "Traders to Copy" },
     { big: "250K+",  small: "Happy Users" },
   ];
   return (
-    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-12 md:py-16">
-      <div className="max-w-[1280px] mx-auto chainviax-hairline-bar">
+    <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-14 md:py-16">
+      <div className="max-w-[1320px] mx-auto chainviax-hairline-bar">
         <div className="grid grid-cols-2 md:grid-cols-4">
           {items.map((it, i) => (
             <div key={it.small}
@@ -492,26 +550,26 @@ function ClosingCTA() {
               <span className="chainviax-dot" /> Ready?
             </div>
             <h2 className="text-[34px] sm:text-[44px] lg:text-[54px] font-bold tracking-[-0.02em] leading-[1.04]">
-              <span className="text-white">Your first trade </span>
+              <span className="text-white">Your first investment </span>
               <span className="chainviax-gold-text">starts here.</span>
             </h2>
             <p className="mt-5 text-[15px] text-slate-400 max-w-lg mx-auto leading-relaxed">
-              Open an account in minutes. Buy your first coin today.
+              Trade on your own or copy a top trader. Open an account and start today.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3">
               <Link href="/register" className="chainviax-btn-gold inline-flex items-center justify-center gap-2 h-[54px] px-9 rounded-[10px] text-[14px] font-bold tracking-wide">
-                Create Account <ArrowRight className="h-4 w-4" />
+                Start Investing <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/login" className="chainviax-btn-outline inline-flex items-center justify-center h-[54px] px-8 rounded-[10px] text-[14px] font-semibold">
-                Sign In
+              <Link href="#traders" className="chainviax-btn-outline inline-flex items-center justify-center h-[54px] px-8 rounded-[10px] text-[14px] font-semibold">
+                Explore Traders
               </Link>
             </div>
             <div className="mt-7 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold">
-              <span>Free to join</span>
+              <span>Free account</span>
               <span className="h-1 w-1 rounded-full bg-amber-500/60" />
-              <span>Fast ID check</span>
+              <span>No minimum</span>
               <span className="h-1 w-1 rounded-full bg-amber-500/60" />
-              <span>Trade today</span>
+              <span>Withdraw anytime</span>
             </div>
           </div>
         </div>
@@ -554,6 +612,3 @@ function SectionHeading({
     </div>
   );
 }
-
-
-
