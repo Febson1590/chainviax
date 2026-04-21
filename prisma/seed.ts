@@ -210,8 +210,8 @@ async function main() {
       maxAmount:        4999,
       minProfit:        0.5,
       maxProfit:        1.0,
-      minDurationHours: 30,
-      maxDurationHours: 50,
+      minDurationHours: 0.5,
+      maxDurationHours: 3,
       profitInterval:   60,
       maxInterval:      60,
       minLossRatio:     8,      // 8–12 % chance per tick → avg ~1 in 10 ticks
@@ -228,8 +228,8 @@ async function main() {
       maxAmount:        19999,
       minProfit:        0.8,
       maxProfit:        1.3,
-      minDurationHours: 25,
-      maxDurationHours: 45,
+      minDurationHours: 0.5,
+      maxDurationHours: 3,
       profitInterval:   60,
       maxInterval:      60,
       minLossRatio:     12,     // 12–18 % per tick
@@ -246,8 +246,8 @@ async function main() {
       maxAmount:        100000,
       minProfit:        1.0,
       maxProfit:        1.5,
-      minDurationHours: 20,
-      maxDurationHours: 45,
+      minDurationHours: 0.5,
+      maxDurationHours: 3,
       profitInterval:   60,
       maxInterval:      60,
       minLossRatio:     16,     // 16–24 % per tick — higher-tier volatility
@@ -350,10 +350,10 @@ async function main() {
   for (const t of tradersToBackfill) {
     // Risk-tiered defaults (percent, 0–100 for ratios; % of copied amount for losses).
     const defaults = t.riskLevel === "LOW"
-      ? { lr: [6, 10],  ll: [0.08, 0.22], hrs: [2, 4] }
+      ? { lr: [6, 10],  ll: [0.08, 0.22], hrs: [0.5, 3] }
       : t.riskLevel === "HIGH"
-        ? { lr: [14, 22], ll: [0.20, 0.60], hrs: [1, 3] }
-        : { lr: [10, 16], ll: [0.14, 0.40], hrs: [1, 3] };
+        ? { lr: [14, 22], ll: [0.20, 0.60], hrs: [0.5, 3] }
+        : { lr: [10, 16], ll: [0.14, 0.40], hrs: [0.5, 3] };
     const patch: Record<string, any> = {
       minDurationHours: defaults.hrs[0],
       maxDurationHours: defaults.hrs[1],

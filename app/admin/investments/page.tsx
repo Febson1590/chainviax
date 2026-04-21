@@ -54,8 +54,8 @@ function PlanModal({ plan, onClose, onSuccess }: { plan?: Plan; onClose: () => v
     maxAmount:        plan?.maxAmount !== null && plan?.maxAmount !== undefined ? String(plan.maxAmount) : "",
     minProfit:        String(plan?.minProfit ?? 0.5),
     maxProfit:        String(plan?.maxProfit ?? 1.5),
-    minDurationHours: plan?.minDurationHours !== null && plan?.minDurationHours !== undefined ? String(plan.minDurationHours) : "",
-    maxDurationHours: plan?.maxDurationHours !== null && plan?.maxDurationHours !== undefined ? String(plan.maxDurationHours) : "",
+    minDurationHours: plan?.minDurationHours !== null && plan?.minDurationHours !== undefined ? String(plan.minDurationHours) : "0.5",
+    maxDurationHours: plan?.maxDurationHours !== null && plan?.maxDurationHours !== undefined ? String(plan.maxDurationHours) : "3",
     minLossRatio:     String(plan?.minLossRatio ?? 0),
     maxLossRatio:     String(plan?.maxLossRatio ?? 0),
     minLoss:          String(plan?.minLoss ?? 0),
@@ -128,8 +128,8 @@ function PlanModal({ plan, onClose, onSuccess }: { plan?: Plan; onClose: () => v
       maxAmount:        form.maxAmount.trim() ? parseFloat(form.maxAmount) : null,
       minProfit:        parseFloat(form.minProfit),
       maxProfit:        parseFloat(form.maxProfit),
-      minDurationHours: form.minDurationHours.trim() ? parseInt(form.minDurationHours) : null,
-      maxDurationHours: form.maxDurationHours.trim() ? parseInt(form.maxDurationHours) : null,
+      minDurationHours: form.minDurationHours.trim() ? parseFloat(form.minDurationHours) : null,
+      maxDurationHours: form.maxDurationHours.trim() ? parseFloat(form.maxDurationHours) : null,
       // Cadence fields are defaulted server-side (unused by the new hour-based engine).
       profitInterval:   60,
       maxInterval:      60,
@@ -215,16 +215,16 @@ function PlanModal({ plan, onClose, onSuccess }: { plan?: Plan; onClose: () => v
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Min Duration (hours)</label>
-              <input type="number" min={0} className={inputCls + " mt-1"}
+              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
                 value={form.minDurationHours} onChange={e => set("minDurationHours", e.target.value)}
-                placeholder="e.g. 30" />
+                placeholder="e.g. 0.5" />
               {err("minDurationHours")}
             </div>
             <div>
               <label className={labelCls}>Max Duration (hours)</label>
-              <input type="number" min={0} className={inputCls + " mt-1"}
+              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
                 value={form.maxDurationHours} onChange={e => set("maxDurationHours", e.target.value)}
-                placeholder="e.g. 50" />
+                placeholder="e.g. 3" />
               {err("maxDurationHours")}
             </div>
           </div>

@@ -91,8 +91,8 @@ export async function userStartInvestment(data: {
   // form validation enforces this. If a legacy plan somehow lacks one,
   // default to 1–3 hours so the engine never slips into seconds.
   const now = new Date();
-  const minH = plan.minDurationHours ?? 1;
-  const maxH = plan.maxDurationHours ?? Math.max(3, minH);
+  const minH = Number(plan.minDurationHours ?? 0.5);
+  const maxH = Number(plan.maxDurationHours ?? Math.max(3, minH));
   const firstTickHours = maxH > minH
     ? minH + Math.random() * (maxH - minH)
     : minH;
@@ -192,8 +192,8 @@ export async function userStartCopyTrade(data: {
   // Hour-based cadence first; seconds-based intervals are only a fallback
   // for legacy traders that don't have the hour band set yet.
   const now = new Date();
-  const minH = trader.minDurationHours ?? null;
-  const maxH = trader.maxDurationHours ?? null;
+  const minH = trader.minDurationHours != null ? Number(trader.minDurationHours) : null;
+  const maxH = trader.maxDurationHours != null ? Number(trader.maxDurationHours) : null;
   let firstDelayMs: number;
   if (minH !== null && maxH !== null && maxH >= minH) {
     const hrs = maxH > minH ? minH + Math.random() * (maxH - minH) : minH;
@@ -401,8 +401,8 @@ export async function userUpgradeInvestmentPlan(data: {
   // Reschedule next tick from the target plan's duration band. First tick
   // timing resets so the new plan's cadence takes effect immediately.
   const now = new Date();
-  const minH = targetPlan.minDurationHours ?? 1;
-  const maxH = targetPlan.maxDurationHours ?? Math.max(3, minH);
+  const minH = Number(targetPlan.minDurationHours ?? 0.5);
+  const maxH = Number(targetPlan.maxDurationHours ?? Math.max(3, minH));
   const nextHours = maxH > minH ? minH + Math.random() * (maxH - minH) : minH;
   const nextProfitAt = new Date(now.getTime() + Math.round(nextHours * 3600 * 1000));
 

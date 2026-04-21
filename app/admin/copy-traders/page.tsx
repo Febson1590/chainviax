@@ -97,8 +97,8 @@ function TraderModal({ trader, onClose, onSuccess }: {
     minCopyAmount:    String(trader?.minCopyAmount ?? 100),
     profitInterval:   String(trader?.profitInterval ?? 60),
     maxInterval:      String(trader?.maxInterval ?? 60),
-    minDurationHours: trader?.minDurationHours != null ? String(trader.minDurationHours) : "",
-    maxDurationHours: trader?.maxDurationHours != null ? String(trader.maxDurationHours) : "",
+    minDurationHours: trader?.minDurationHours != null ? String(trader.minDurationHours) : "0.5",
+    maxDurationHours: trader?.maxDurationHours != null ? String(trader.maxDurationHours) : "3",
     minProfit:        String(trader?.minProfit ?? 0.3),
     maxProfit:        String(trader?.maxProfit ?? 1.2),
     minLossRatio:     String(trader?.minLossRatio ?? 0),
@@ -190,8 +190,8 @@ function TraderModal({ trader, onClose, onSuccess }: {
         // kept at 60s server-side; not exposed in the admin form anymore.
         profitInterval:   60,
         maxInterval:      60,
-        minDurationHours: parseInt(form.minDurationHours) || 1,
-        maxDurationHours: parseInt(form.maxDurationHours) || 3,
+        minDurationHours: parseFloat(form.minDurationHours) || 0.5,
+        maxDurationHours: parseFloat(form.maxDurationHours) || 3,
         minProfit:        parseFloat(form.minProfit)     || 0,
         maxProfit:        parseFloat(form.maxProfit)     || 0,
         minLossRatio:     parseFloat(form.minLossRatio)  || 0,
@@ -389,14 +389,14 @@ function TraderModal({ trader, onClose, onSuccess }: {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Min Duration (hours)</label>
-              <input type="number" min={0} step="1" className={inputCls + " mt-1"}
+              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
                 value={form.minDurationHours} onChange={e => set("minDurationHours", e.target.value)}
-                placeholder="e.g. 1" />
+                placeholder="e.g. 0.5" />
               {errors.minDurationHours && <p className="text-[11px] text-red-400 mt-1">{errors.minDurationHours}</p>}
             </div>
             <div>
               <label className={labelCls}>Max Duration (hours)</label>
-              <input type="number" min={0} step="1" className={inputCls + " mt-1"}
+              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
                 value={form.maxDurationHours} onChange={e => set("maxDurationHours", e.target.value)}
                 placeholder="e.g. 3" />
               {errors.maxDurationHours && <p className="text-[11px] text-red-400 mt-1">{errors.maxDurationHours}</p>}

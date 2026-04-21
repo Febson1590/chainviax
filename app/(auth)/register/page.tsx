@@ -3,19 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input }  from "@/components/ui/input";
-import { Label }  from "@/components/ui/label";
-import { Card }   from "@/components/ui/card";
+import { Logo } from "@/components/logo";
 import { registerUser } from "@/lib/actions/auth";
 import {
-  Eye, EyeOff, Lock, Mail, User, Phone, Globe,
-  Loader2, AlertCircle, CheckCircle2, Check,
-  ChevronRight, ChevronLeft, Shield, MapPin,
+  Eye, EyeOff, Lock, Mail, User, Phone, Globe, MapPin,
+  Loader2, AlertCircle, Check, ArrowRight, ArrowLeft,
+  ShieldCheck, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 
-/* ── Country list ──────────────────────────────────────────────────────── */
+/* ─ Country list ────────────────────────────────────────────────────── */
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia",
   "Austria","Azerbaijan","Bahrain","Bangladesh","Belgium","Bolivia","Bosnia",
@@ -35,237 +32,90 @@ const COUNTRIES = [
   "Zimbabwe",
 ];
 
-/* ── Country → ISO-3166-1 alpha-2 for emoji flags ─────────────────────── */
-const COUNTRY_CODES: Record<string, string> = {
-  "Afghanistan":"AF","Albania":"AL","Algeria":"DZ","Angola":"AO","Argentina":"AR",
-  "Armenia":"AM","Australia":"AU","Austria":"AT","Azerbaijan":"AZ","Bahrain":"BH",
-  "Bangladesh":"BD","Belgium":"BE","Bolivia":"BO","Bosnia":"BA","Brazil":"BR",
-  "Bulgaria":"BG","Cambodia":"KH","Cameroon":"CM","Canada":"CA","Chile":"CL",
-  "China":"CN","Colombia":"CO","Costa Rica":"CR","Croatia":"HR","Cuba":"CU",
-  "Czech Republic":"CZ","Denmark":"DK","Ecuador":"EC","Egypt":"EG",
-  "El Salvador":"SV","Estonia":"EE","Ethiopia":"ET","Finland":"FI","France":"FR",
-  "Georgia":"GE","Germany":"DE","Ghana":"GH","Greece":"GR","Guatemala":"GT",
-  "Honduras":"HN","Hong Kong":"HK","Hungary":"HU","India":"IN","Indonesia":"ID",
-  "Iran":"IR","Iraq":"IQ","Ireland":"IE","Israel":"IL","Italy":"IT",
-  "Jamaica":"JM","Japan":"JP","Jordan":"JO","Kazakhstan":"KZ","Kenya":"KE",
-  "Kuwait":"KW","Lebanon":"LB","Libya":"LY","Lithuania":"LT","Malaysia":"MY",
-  "Mexico":"MX","Moldova":"MD","Morocco":"MA","Mozambique":"MZ","Myanmar":"MM",
-  "Netherlands":"NL","New Zealand":"NZ","Nigeria":"NG","Norway":"NO","Oman":"OM",
-  "Pakistan":"PK","Panama":"PA","Paraguay":"PY","Peru":"PE","Philippines":"PH",
-  "Poland":"PL","Portugal":"PT","Qatar":"QA","Romania":"RO","Russia":"RU",
-  "Saudi Arabia":"SA","Senegal":"SN","Serbia":"RS","Singapore":"SG",
-  "South Africa":"ZA","South Korea":"KR","Spain":"ES","Sri Lanka":"LK",
-  "Sweden":"SE","Switzerland":"CH","Taiwan":"TW","Tanzania":"TZ","Thailand":"TH",
-  "Tunisia":"TN","Turkey":"TR","Uganda":"UG","Ukraine":"UA",
-  "United Arab Emirates":"AE","United Kingdom":"GB","United States":"US",
-  "Uruguay":"UY","Uzbekistan":"UZ","Venezuela":"VE","Vietnam":"VN",
-  "Yemen":"YE","Zimbabwe":"ZW",
-};
-
-/* ── Emoji flag from ISO-3166-1 alpha-2 code ───────────────────────────── */
-function flagEmoji(code: string): string {
-  return [...code.toUpperCase()].map(c =>
-    String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
-  ).join("");
-}
-
-/* ── Password strength rules ───────────────────────────────────────────── */
 const PWD_RULES = [
-  { label: "At least 8 characters",          test: (p: string) => p.length >= 8 },
-  { label: "Contains uppercase letter",       test: (p: string) => /[A-Z]/.test(p) },
-  { label: "Contains number",                 test: (p: string) => /[0-9]/.test(p) },
+  { label: "At least 8 characters",     test: (p: string) => p.length >= 8 },
+  { label: "Contains uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Contains number",           test: (p: string) => /[0-9]/.test(p) },
 ];
 
-/* ── Step metadata ─────────────────────────────────────────────────────── */
-const STEPS = [
-  { n: 1, label: "Personal Info", icon: User,   heading: "Personal Information",      sub: "Set up your trading profile"         },
-  { n: 2, label: "Location",      icon: Globe,  heading: "Location",                  sub: "Set your regional trading preferences"},
-  { n: 3, label: "Security",      icon: Shield, heading: "Account Security",          sub: "Secure your trading account"          },
-];
+const STEP_LABELS = ["Personal", "Location", "Security"];
 
-/* ── Stepper ─────────────────────────────────────────────────────────── */
-function Stepper({ step }: { step: number }) {
-  return (
-    <div className="flex items-start justify-between mb-8 select-none">
-      {STEPS.map(({ n, label }, i) => (
-        <div key={n} className="flex items-center flex-1">
-          <div className="flex flex-col items-center gap-1.5">
-            <div className={`
-              w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold
-              transition-all duration-300 flex-shrink-0
-              ${step > n
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                : step === n
-                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30 ring-4 ring-sky-500/20"
-                  : "bg-white/[0.07] text-slate-400 border border-white/[0.18]"}
-            `}>
-              {step > n ? <Check size={14} strokeWidth={3} /> : n}
-            </div>
-            <span className={`text-[10px] font-medium tracking-wider whitespace-nowrap hidden sm:block
-              ${step === n ? "text-sky-400" : step > n ? "text-emerald-400" : "text-slate-500"}`}>
-              {label}
-            </span>
-          </div>
-
-          {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-px mx-2 transition-all duration-500
-              ${step > n ? "bg-sky-500/40" : "bg-white/[0.14]"}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ── StepHeader ──────────────────────────────────────────────────────── */
-function StepHeader({ step }: { step: number }) {
-  const s = STEPS[step - 1];
-  const StepIcon = s.icon;
-  return (
-    <div className="flex items-center gap-3 rounded-xl p-4 mb-6"
-      style={{ background: "rgba(234, 179, 8,0.09)", border: "1px solid rgba(234, 179, 8,0.22)" }}>
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(234, 179, 8,0.15)", border: "1px solid rgba(234, 179, 8,0.30)" }}>
-        <StepIcon className="h-5 w-5 text-sky-400" />
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-white">{s.heading}</div>
-        <div className="text-xs text-slate-400">{s.sub}</div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Field ─────────────────────────────────────────────────────────────── */
-function Field({
-  label, error, children, required,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-  required?: boolean;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-medium text-slate-300 uppercase tracking-widest">
-        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-      </Label>
-      {children}
-      {error && (
-        <p className="flex items-center gap-1.5 text-xs text-red-400">
-          <AlertCircle size={11} className="flex-shrink-0" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ── Component ─────────────────────────────────────────────────────────── */
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [step, setStep] = useState(1);
-
-  const [formData, setFormData] = useState({
-    username:        "",
-    fullName:        "",
-    email:           "",
-    phone:           "",
-    country:         "",
-    password:        "",
-    confirmPassword: "",
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [form, setForm] = useState({
+    username: "", fullName: "", email: "", phone: "",
+    country: "",
+    password: "", confirmPassword: "",
   });
+  const [errors,      setErrors]      = useState<Record<string, string>>({});
+  const [showPwd,     setShowPwd]     = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [captchaOk,   setCaptchaOk]   = useState<"idle" | "checking" | "ok">("idle");
+  const [termsOk,     setTermsOk]     = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [loading,     setLoading]     = useState(false);
 
-  const [errors,       setErrors]       = useState<Record<string, string>>({});
-  const [showPwd,      setShowPwd]      = useState(false);
-  const [showConfirm,  setShowConfirm]  = useState(false);
-  const [verifyState,  setVerifyState]  = useState<"idle" | "checking" | "verified">("idle");
-  const [termsOk,      setTermsOk]      = useState(false);
-  const [loading,      setLoading]      = useState(false);
-  const [submitError,  setSubmitError]  = useState("");
-
-  const set = (k: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [k]: e.target.value }));
-    if (errors[k]) setErrors(prev => { const next = { ...prev }; delete next[k]; return next; });
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm((prev) => ({ ...prev, [k]: e.target.value }));
+    if (errors[k]) setErrors((prev) => { const { [k]: _d, ...rest } = prev; return rest; });
   };
 
-  function validateStep(s: number): boolean {
+  function validate(s: 1 | 2 | 3): boolean {
     const errs: Record<string, string> = {};
     if (s === 1) {
-      if (formData.username.trim().length < 2)
-        errs.username = "Username must be at least 2 characters";
-      if (formData.fullName.trim().length < 2)
-        errs.fullName = "Full name must be at least 2 characters";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-        errs.email = "Enter a valid email address";
-      if (formData.phone && !/^\+?[\d\s\-(). ]{6,20}$/.test(formData.phone))
-        errs.phone = "Enter a valid phone number";
+      if (form.username.trim().length < 2) errs.username = "Username must be at least 2 characters";
+      if (form.fullName.trim().length < 2) errs.fullName = "Full name must be at least 2 characters";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address";
+      if (form.phone && !/^\+?[\d\s\-(). ]{6,20}$/.test(form.phone)) errs.phone = "Enter a valid phone number";
     }
     if (s === 2) {
-      if (!formData.country) errs.country = "Please select your country";
+      if (!form.country) errs.country = "Please select your country";
     }
     if (s === 3) {
-      if (formData.password.length < 8)
-        errs.password = "Password must be at least 8 characters";
-      else if (!/[A-Z]/.test(formData.password))
-        errs.password = "Include at least one uppercase letter";
-      else if (!/[0-9]/.test(formData.password))
-        errs.password = "Include at least one number";
-      if (formData.password !== formData.confirmPassword)
-        errs.confirmPassword = "Passwords do not match";
-      if (verifyState !== "verified")
-        errs.verify = "Please complete human verification";
-      if (!termsOk)
-        errs.terms = "You must accept the Terms & Privacy Policy";
+      if (form.password.length < 8) errs.password = "Password must be at least 8 characters";
+      else if (!/[A-Z]/.test(form.password)) errs.password = "Include at least one uppercase letter";
+      else if (!/[0-9]/.test(form.password)) errs.password = "Include at least one number";
+      if (form.password !== form.confirmPassword) errs.confirmPassword = "Passwords do not match";
+      if (captchaOk !== "ok") errs.captcha = "Please complete human verification";
+      if (!termsOk) errs.terms = "You must accept the Terms & Privacy Policy";
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
-  function next() { if (validateStep(step)) setStep(s => Math.min(s + 1, 3)); }
-  function back() { setErrors({}); setStep(s => Math.max(s - 1, 1)); }
+  const next = () => { if (validate(step)) setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s)); };
+  const back = () => { setErrors({}); setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : s)); };
 
-  function handleVerify() {
-    if (verifyState !== "idle") return;
-    setVerifyState("checking");
+  function handleCaptcha() {
+    if (captchaOk !== "idle") return;
+    setCaptchaOk("checking");
     setTimeout(() => {
-      setVerifyState("verified");
-      if (errors.verify) setErrors(prev => { const next = { ...prev }; delete next.verify; return next; });
-    }, 1200);
+      setCaptchaOk("ok");
+      if (errors.captcha) setErrors((prev) => { const { captcha: _d, ...rest } = prev; return rest; });
+    }, 900);
   }
 
   async function handleSubmit() {
-    if (!validateStep(3)) return;
+    if (!validate(3)) return;
     setLoading(true);
     setSubmitError("");
     try {
       const result = await registerUser({
-        name:     formData.username,
-        fullName: formData.fullName,
-        email:    formData.email,
-        password: formData.password,
-        phone:    formData.phone   || undefined,
-        country:  formData.country || undefined,
+        name:     form.username,
+        fullName: form.fullName,
+        email:    form.email,
+        password: form.password,
+        phone:    form.phone   || undefined,
+        country:  form.country || undefined,
       });
-      if (result?.error) {
-        setSubmitError(result.error);
-      } else {
-        // Stash the password briefly in sessionStorage (tab-scoped, cleared
-        // after the verify page consumes it) so the verify step can log the
-        // user in automatically on OTP success without a second manual sign-in.
-        try {
-          sessionStorage.setItem(
-            `chainviax:postVerifyAuth:${formData.email.toLowerCase()}`,
-            formData.password,
-          );
-        } catch { /* sessionStorage unavailable — falls back to manual sign-in */ }
-
-        toast.success("Account created successfully", {
-          description: "Check your email to verify your account.",
-        });
-        router.push(`/verify?email=${encodeURIComponent(formData.email)}&type=register`);
-      }
+      if (result?.error) { setSubmitError(result.error); return; }
+      try {
+        sessionStorage.setItem(`chainviax:postVerifyAuth:${form.email.toLowerCase()}`, form.password);
+      } catch { /* storage unavailable */ }
+      toast.success("Account created", { description: "Check your email to verify your account." });
+      router.push(`/verify?email=${encodeURIComponent(form.email)}&type=register`);
     } catch {
       setSubmitError("Registration failed. Please try again.");
     } finally {
@@ -273,383 +123,334 @@ export default function RegisterPage() {
     }
   }
 
-  /* ── Shared input class — sharper borders, clearer placeholders ─────── */
-  const inputCls = `pl-10 bg-white/[0.06] border-white/[0.18] text-white placeholder:text-slate-500
-    focus:border-sky-500/70 focus:bg-white/[0.08] focus:ring-0 h-11 transition-colors duration-200
-    hover:border-white/30 hover:bg-white/[0.07]`;
-
-  /* ── Shared select class — mirrors inputCls ─────────────────────────── */
-  const selectCls = `w-full h-11 pl-10 pr-9 bg-white/[0.06] border border-white/[0.18] text-white text-sm
-    rounded-md focus:outline-none focus:border-sky-500/70 focus:bg-white/[0.08]
-    hover:border-white/30 hover:bg-white/[0.07] transition-colors duration-200
-    appearance-none cursor-pointer [&>option]:bg-[#0a1628] [&>option]:text-white`;
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     RENDER
-  ═══════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="w-full max-w-md">
-
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Create Your Account</h1>
-        <p className="text-sm text-slate-300">
-          {step === 1 && "Step 1 of 3 — Your trading profile details"}
-          {step === 2 && "Step 2 of 3 — Your location & regional settings"}
-          {step === 3 && "Step 3 of 3 — Secure your account"}
-        </p>
+    <div className="fixed inset-0 z-50 bg-[#05060a] text-white overflow-auto">
+      {/* Ambient gold glows */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-[-180px] right-[-140px] w-[520px] h-[520px] rounded-full blur-[130px] opacity-30"
+             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.28), transparent 65%)" }} />
+        <div className="absolute bottom-[-200px] left-[-160px] w-[480px] h-[480px] rounded-full blur-[140px] opacity-22"
+             style={{ background: "radial-gradient(circle, rgba(244,196,64,0.22), transparent 70%)" }} />
       </div>
 
-      {/* Card — subtle depth shadow + ring for premium separation */}
-      <Card className="glass-card border-0 rounded-2xl p-7 sm:p-8
-        shadow-[0_8px_48px_rgba(0,0,0,0.6),0_2px_12px_rgba(0,0,0,0.4)]
-        ring-1 ring-white/[0.07]">
+      <div className="relative min-h-screen flex flex-col items-center px-5 sm:px-8 py-10 sm:py-14">
+        {/* Top: Logo */}
+        <Logo size="md" href="/" className="justify-center" />
 
-        <Stepper step={step} />
+        {/* Title block */}
+        <div className="mt-8 text-center max-w-md">
+          <h1 className="text-[26px] sm:text-[30px] font-bold text-white tracking-[-0.01em]">
+            Create Your Account
+          </h1>
+          <p className="mt-2 text-[13.5px] font-medium text-slate-200">
+            Step {step} of 3 — {step === 1 ? "Personal information" : step === 2 ? "Location & region" : "Secure your account"}
+          </p>
+        </div>
 
-        {/* ── Global submit error ─────────────────────────────────────── */}
-        {submitError && (
-          <div className="mb-5 flex items-center gap-2.5 text-sm text-red-400
-            bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
-            <AlertCircle size={15} className="flex-shrink-0" />
-            {submitError}
-          </div>
-        )}
+        {/* Stepper */}
+        <div className="mt-7 w-full max-w-md">
+          <Stepper step={step} />
+        </div>
 
-        {/* ════════════════════════════════════════════════════════════════
-            STEP 1 — Personal Info
-        ════════════════════════════════════════════════════════════════ */}
-        {step === 1 && (
-          <div className="space-y-5">
-            <StepHeader step={step} />
-
-            <Field label="Trading Username" error={errors.username} required>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  value={formData.username}
-                  onChange={set("username")}
-                  placeholder="e.g. tradervault"
-                  className={inputCls}
-                />
-              </div>
-            </Field>
-
-            <Field label="Full Name" error={errors.fullName} required>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  value={formData.fullName}
-                  onChange={set("fullName")}
-                  placeholder="Your full legal name"
-                  className={inputCls}
-                />
-              </div>
-            </Field>
-
-            <Field label="Email Address" error={errors.email} required>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={set("email")}
-                  placeholder="you@example.com"
-                  className={inputCls}
-                />
-              </div>
-            </Field>
-
-            <Field label="Phone Number" error={errors.phone}>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={set("phone")}
-                  placeholder="+1 555 123 4567"
-                  className={inputCls}
-                />
-              </div>
-            </Field>
-          </div>
-        )}
-
-        {/* ════════════════════════════════════════════════════════════════
-            STEP 2 — Location
-        ════════════════════════════════════════════════════════════════ */}
-        {step === 2 && (
-          <div className="space-y-5">
-            <StepHeader step={step} />
-
-            <Field label="Country / Region" error={errors.country} required>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10 pointer-events-none" />
-                <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10 pointer-events-none rotate-90" />
-                <select
-                  value={formData.country}
-                  onChange={set("country")}
-                  className={selectCls}
-                >
-                  <option value="" disabled className="text-slate-500">Select your country</option>
-                  {COUNTRIES.map(c => {
-                    const code = COUNTRY_CODES[c];
-                    const flag = code ? flagEmoji(code) + " " : "";
-                    return <option key={c} value={c}>{flag}{c}</option>;
-                  })}
-                </select>
-              </div>
-            </Field>
-
-            {/* Info card */}
-            <div className="rounded-xl p-4"
-              style={{ background: "rgba(234, 179, 8,0.08)", border: "1px solid rgba(234, 179, 8,0.20)" }}>
-              <div className="flex items-start gap-3">
-                <Globe className="h-4 w-4 text-sky-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-semibold text-sky-400 mb-1">Regional Trading Information</div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Your location helps us apply region-specific compliance rules,
-                    regulatory requirements, and optimal server routing for faster order execution.
-                  </p>
-                </div>
-              </div>
+        {/* Card */}
+        <div className="mt-8 w-full max-w-md chainviax-login-card p-7 sm:p-9">
+          {submitError && (
+            <div className="mb-5 flex items-center gap-2.5 text-[13px] text-red-300 bg-red-500/10 border border-red-500/25 rounded-lg px-4 py-3">
+              <AlertCircle size={15} className="flex-shrink-0" />
+              {submitError}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ════════════════════════════════════════════════════════════════
-            STEP 3 — Security
-        ════════════════════════════════════════════════════════════════ */}
-        {step === 3 && (
-          <div className="space-y-5">
-            <StepHeader step={step} />
-
-            {/* Password */}
-            <Field label="Password" error={errors.password} required>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  type={showPwd ? "text" : "password"}
-                  value={formData.password}
-                  onChange={set("password")}
-                  placeholder="Create a strong password"
-                  className={`${inputCls} pr-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPwd(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {/* Strength indicators */}
-              {formData.password && (
-                <div className="space-y-1 pt-1">
-                  {PWD_RULES.map(r => {
-                    const ok = r.test(formData.password);
-                    return (
-                      <div key={r.label} className={`flex items-center gap-2 text-xs transition-colors duration-200 ${ok ? "text-emerald-400" : "text-slate-500"}`}>
-                        <CheckCircle2 size={11} className={ok ? "text-emerald-400" : "text-slate-600"} />
-                        {r.label}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Field>
-
-            {/* Confirm Password */}
-            <Field label="Confirm Password" error={errors.confirmPassword} required>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  type={showConfirm ? "text" : "password"}
-                  value={formData.confirmPassword}
-                  onChange={set("confirmPassword")}
-                  placeholder="Confirm your password"
-                  className={`${inputCls} pr-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </Field>
-
-            {/* Human Verification */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-slate-300 uppercase tracking-widest">
-                Human Verification<span className="text-red-400 ml-0.5">*</span>
-              </Label>
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={verifyState !== "idle"}
-                className="w-full flex items-center gap-3.5 rounded-xl px-4 py-3.5
-                  transition-all duration-300 cursor-pointer disabled:cursor-default"
-                style={{
-                  background: verifyState === "verified"
-                    ? "rgba(16,185,129,0.08)"
-                    : "rgba(234, 179, 8,0.05)",
-                  border: verifyState === "verified"
-                    ? "1px solid rgba(16,185,129,0.28)"
-                    : errors.verify
-                      ? "1px solid rgba(239,68,68,0.40)"
-                      : "1px solid rgba(234, 179, 8,0.22)",
-                }}
-              >
-                <div className={`
-                  w-5 h-5 rounded flex items-center justify-center flex-shrink-0
-                  transition-all duration-300
-                  ${verifyState === "verified"
-                    ? "bg-emerald-500 shadow-lg shadow-emerald-500/30"
-                    : verifyState === "checking"
-                      ? "bg-sky-500/40 border border-sky-500/40"
-                      : "bg-white/[0.07] border border-white/[0.20]"}
-                `}>
-                  {verifyState === "verified"  && <Check   size={12} className="text-white" strokeWidth={3} />}
-                  {verifyState === "checking"  && <Loader2 size={11} className="text-sky-400 animate-spin" />}
-                </div>
-
-                <span className={`text-sm font-medium transition-colors duration-300
-                  ${verifyState === "verified" ? "text-emerald-400" : "text-slate-200"}`}>
-                  {verifyState === "idle"     && "I'm not a robot"}
-                  {verifyState === "checking" && "Verifying…"}
-                  {verifyState === "verified" && "Verified — Human confirmed"}
-                </span>
-
-                {verifyState === "idle" && (
-                  <span className="ml-auto text-[10px] text-slate-500 tracking-wider uppercase">Click to verify</span>
-                )}
+          {/* ═════ STEP 1 — Personal ═════ */}
+          {step === 1 && (
+            <div className="space-y-[22px]">
+              <FieldInput
+                label="Trading Username" icon={User}
+                value={form.username} onChange={set("username")}
+                placeholder="e.g. tradervault" required
+                error={errors.username}
+              />
+              <FieldInput
+                label="Full Name" icon={User}
+                value={form.fullName} onChange={set("fullName")}
+                placeholder="Your full legal name" required
+                error={errors.fullName}
+              />
+              <FieldInput
+                label="Email Address" icon={Mail} type="email"
+                value={form.email} onChange={set("email")}
+                placeholder="you@example.com" required
+                error={errors.email}
+              />
+              <FieldInput
+                label="Phone Number" icon={Phone} type="tel"
+                value={form.phone} onChange={set("phone")}
+                placeholder="+1 555 123 4567"
+                error={errors.phone}
+              />
+              <button onClick={next}
+                      className="chainviax-btn-gold w-full h-[54px] mt-2 rounded-[12px] text-[14.5px] font-bold tracking-wide flex items-center justify-center gap-2">
+                Continue <ArrowRight className="h-4 w-4" />
               </button>
-              {errors.verify && (
-                <p className="flex items-center gap-1.5 text-xs text-red-400">
-                  <AlertCircle size={11} />
-                  {errors.verify}
-                </p>
-              )}
+              <p className="text-center text-[13px] font-medium text-slate-200">
+                Already have an account?{" "}
+                <Link href="/login" className="text-amber-300 hover:text-amber-200 font-semibold">
+                  Sign in
+                </Link>
+              </p>
             </div>
+          )}
 
-            {/* Terms */}
-            <div className="space-y-1.5">
-              <label
-                className="flex items-start gap-3.5 cursor-pointer group"
-                onClick={() => {
-                  setTermsOk(v => {
-                    if (errors.terms && !v) setErrors(prev => { const next = { ...prev }; delete next.terms; return next; });
-                    return !v;
-                  });
-                }}
-              >
-                <div className={`
-                  w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5
-                  transition-all duration-200 cursor-pointer
-                  ${termsOk
-                    ? "bg-sky-500 border border-sky-500"
-                    : errors.terms
-                      ? "bg-red-500/10 border border-red-500/40"
-                      : "bg-white/[0.07] border border-white/[0.20] group-hover:border-white/35"}
-                `}>
-                  {termsOk && <Check size={12} className="text-white" strokeWidth={3} />}
+          {/* ═════ STEP 2 — Location ═════ */}
+          {step === 2 && (
+            <div className="space-y-[22px]">
+              <div>
+                <label className="block text-[13px] font-semibold text-white mb-2.5">
+                  Country / Region <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
+                  <select
+                    value={form.country}
+                    onChange={set("country")}
+                    className="chainviax-login-input w-full pl-[46px] pr-10 h-[56px] rounded-[12px] text-[14.5px] appearance-none cursor-pointer [&>option]:bg-[#0a0c14] [&>option]:text-white"
+                  >
+                    <option value="">Select your country…</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 h-[15px] w-[15px] text-slate-500 pointer-events-none" />
                 </div>
-                <span className="text-xs text-slate-300 leading-relaxed mt-0.5">
-                  I agree to Chainviax&apos;s{" "}
-                  <Link href="/terms" target="_blank" className="text-sky-400 hover:text-sky-300 underline underline-offset-2" onClick={e => e.stopPropagation()}>Terms of Service</Link>
+                {errors.country && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
+                    <AlertCircle size={11} /> {errors.country}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-start gap-3 rounded-xl px-4 py-3.5 border border-amber-500/20 bg-amber-500/[0.04]">
+                <Info className="h-[15px] w-[15px] text-amber-300 shrink-0 mt-0.5" />
+                <p className="text-[12.5px] text-slate-200 leading-[1.55]">
+                  Your country helps us apply the right trading rules, payment methods, and
+                  compliance checks for your region.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={back}
+                        className="chainviax-btn-outline h-[54px] px-6 rounded-[12px] text-[14.5px] font-semibold flex items-center justify-center gap-2">
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </button>
+                <button onClick={next}
+                        className="chainviax-btn-gold flex-1 h-[54px] rounded-[12px] text-[14.5px] font-bold tracking-wide flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ═════ STEP 3 — Security ═════ */}
+          {step === 3 && (
+            <div className="space-y-[22px]">
+              <div>
+                <label className="block text-[13px] font-semibold text-white mb-2.5">
+                  Create Password <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
+                  <input
+                    type={showPwd ? "text" : "password"}
+                    value={form.password}
+                    onChange={set("password")}
+                    placeholder="Enter a strong password"
+                    className="chainviax-login-input w-full pl-[46px] pr-12 h-[56px] rounded-[12px] text-[14.5px]"
+                  />
+                  <button type="button" onClick={() => setShowPwd(!showPwd)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300 transition-colors"
+                          aria-label={showPwd ? "Hide password" : "Show password"}>
+                    {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
+                    <AlertCircle size={11} /> {errors.password}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-white mb-2.5">
+                  Confirm Password <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={set("confirmPassword")}
+                    placeholder="Re-enter your password"
+                    className="chainviax-login-input w-full pl-[46px] pr-12 h-[56px] rounded-[12px] text-[14.5px]"
+                  />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-300 transition-colors"
+                          aria-label={showConfirm ? "Hide password" : "Show password"}>
+                    {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
+                    <AlertCircle size={11} /> {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* Password rules */}
+              <ul className="space-y-1.5 rounded-xl px-4 py-3 border border-white/[0.07] bg-white/[0.02]">
+                {PWD_RULES.map((r) => {
+                  const ok = r.test(form.password);
+                  return (
+                    <li key={r.label} className={`flex items-center gap-2 text-[12px] font-medium ${ok ? "text-emerald-300" : "text-slate-300"}`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${ok ? "bg-emerald-500/20 text-emerald-300" : "bg-white/[0.06] text-slate-500"}`}>
+                        {ok ? <Check size={9} strokeWidth={3} /> : <span className="w-1 h-1 rounded-full bg-current opacity-50" />}
+                      </span>
+                      {r.label}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Captcha */}
+              <button type="button" onClick={handleCaptcha}
+                      className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 border border-white/[0.08] bg-white/[0.02] hover:border-amber-500/35 transition-colors">
+                <div className={`w-5 h-5 rounded-[5px] flex items-center justify-center border ${
+                  captchaOk === "ok"
+                    ? "bg-emerald-500 border-emerald-500"
+                    : captchaOk === "checking"
+                      ? "bg-amber-500/20 border-amber-500/60"
+                      : "bg-transparent border-white/20"
+                }`}>
+                  {captchaOk === "ok" && <Check size={12} className="text-white" strokeWidth={3} />}
+                  {captchaOk === "checking" && <Loader2 size={12} className="text-amber-300 animate-spin" />}
+                </div>
+                <span className="text-[13.5px] font-medium text-slate-200">I&rsquo;m not a robot</span>
+                <ShieldCheck size={14} className="ml-auto text-slate-500" />
+              </button>
+              {errors.captcha && <p className="text-xs text-red-400">{errors.captcha}</p>}
+
+              {/* Terms */}
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input type="checkbox" checked={termsOk} onChange={(e) => {
+                  setTermsOk(e.target.checked);
+                  if (errors.terms) setErrors((prev) => { const { terms: _d, ...rest } = prev; return rest; });
+                }}
+                       className="mt-1 w-4 h-4 accent-amber-400 cursor-pointer" />
+                <span className="text-[12.5px] font-medium text-slate-200 leading-[1.55]">
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-amber-300 hover:text-amber-200 font-semibold">Terms of Service</Link>
                   {" "}and{" "}
-                  <Link href="/privacy" target="_blank" className="text-sky-400 hover:text-sky-300 underline underline-offset-2" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
-                  {" "}I confirm I am at least 18 years old.
+                  <Link href="/privacy" className="text-amber-300 hover:text-amber-200 font-semibold">Privacy Policy</Link>.
                 </span>
               </label>
-              {errors.terms && (
-                <p className="flex items-center gap-1.5 text-xs text-red-400 pl-8">
-                  <AlertCircle size={11} />
-                  {errors.terms}
-                </p>
-              )}
+              {errors.terms && <p className="text-xs text-red-400">{errors.terms}</p>}
+
+              <div className="flex gap-3">
+                <button onClick={back}
+                        className="chainviax-btn-outline h-[54px] px-6 rounded-[12px] text-[14.5px] font-semibold flex items-center justify-center gap-2">
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </button>
+                <button onClick={handleSubmit} disabled={loading}
+                        className="chainviax-btn-gold flex-1 h-[54px] rounded-[12px] text-[14.5px] font-bold tracking-wide flex items-center justify-center gap-2 disabled:opacity-60">
+                  {loading
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</>
+                    : "Create Account"}
+                </button>
+              </div>
             </div>
+          )}
+        </div>
+
+        <p className="mt-8 text-[11px] text-slate-500">© {new Date().getFullYear()} Chainviax</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Reusable field input
+   ═══════════════════════════════════════════════════════════════════════ */
+
+function FieldInput({
+  label, icon: Icon, value, onChange, placeholder, type = "text", required, error,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold text-white mb-2.5">
+        {label}
+        {required && <span className="text-red-400 ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 h-[17px] w-[17px] text-amber-400/75" />
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className="chainviax-login-input w-full pl-[46px] pr-4 h-[56px] rounded-[12px] text-[14.5px]"
+        />
+      </div>
+      {error && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
+          <AlertCircle size={11} /> {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Stepper — clean, gold, with completed checkmarks
+   ═══════════════════════════════════════════════════════════════════════ */
+
+function Stepper({ step }: { step: number }) {
+  return (
+    <div className="flex items-start justify-between select-none">
+      {STEP_LABELS.map((label, i) => {
+        const n = i + 1;
+        const isDone = step > n;
+        const isActive = step === n;
+        return (
+          <div key={label} className="flex items-center flex-1">
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-200
+                ${isDone
+                  ? "bg-amber-500 text-[#1b1205] shadow-[0_6px_16px_rgba(244,196,64,0.45)]"
+                  : isActive
+                    ? "bg-gradient-to-br from-amber-300 to-amber-500 text-[#1b1205] shadow-[0_6px_20px_rgba(244,196,64,0.5)] ring-4 ring-amber-500/15"
+                    : "bg-white/[0.04] text-slate-400 border border-white/[0.12]"}`}>
+                {isDone ? <Check size={15} strokeWidth={3} /> : n}
+              </div>
+              <span className={`text-[10.5px] font-semibold uppercase tracking-[0.18em] whitespace-nowrap
+                ${isActive ? "text-amber-300" : isDone ? "text-amber-400/80" : "text-slate-500"}`}>
+                {label}
+              </span>
+            </div>
+            {i < STEP_LABELS.length - 1 && (
+              <div className={`flex-1 h-[2px] mx-2.5 mt-[18px] rounded-full transition-colors duration-300
+                ${step > n ? "bg-amber-500/60" : "bg-white/[0.08]"}`} />
+            )}
           </div>
-        )}
-
-        {/* ── Navigation buttons ──────────────────────────────────────── */}
-        <div className={`flex gap-3 mt-7 ${step > 1 ? "justify-between" : "justify-end"}`}>
-          {step > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={back}
-              disabled={loading}
-              className="flex items-center gap-2 border-white/[0.18] text-slate-300
-                hover:bg-white/[0.07] hover:text-white hover:border-white/30 h-11 px-5 transition-all"
-            >
-              <ChevronLeft size={16} />
-              Previous
-            </Button>
-          )}
-
-          {step < 3 ? (
-            <Button
-              type="button"
-              onClick={next}
-              className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white
-                font-semibold h-11 px-6 shadow-lg shadow-sky-500/35 hover:shadow-sky-500/55
-                hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ml-auto"
-            >
-              Continue
-              <ChevronRight size={16} />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white
-                font-semibold h-11 px-8 shadow-lg shadow-sky-500/35 hover:shadow-sky-500/55
-                hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-            >
-              {loading ? (
-                <><Loader2 size={16} className="animate-spin" /> Creating Account…</>
-              ) : (
-                <>Create Account <Check size={16} /></>
-              )}
-            </Button>
-          )}
-        </div>
-
-        {/* Step indicator + sign-in link */}
-        <div className="mt-5 pt-5 border-t border-white/[0.09] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-slate-500 order-2 sm:order-1">
-            Step {step} of {STEPS.length}
-          </p>
-          <p className="text-sm text-slate-400 order-1 sm:order-2">
-            Already have an account?{" "}
-            <Link href="/login" className="text-sky-400 hover:text-sky-300 font-medium transition-colors">
-              Sign in
-            </Link>
-          </p>
-        </div>
-
-        {/* Trust badges */}
-        <div className="flex items-center justify-center gap-6 mt-5 pt-1">
-          {[
-            { icon: Lock,   label: "TLS Secured"       },
-            { icon: Shield, label: "Hashed Passwords"  },
-            { icon: Check,  label: "KYC Verified"      },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-1.5 text-slate-500">
-              <Icon size={11} />
-              <span className="text-[10px] tracking-wide">{label}</span>
-            </div>
-          ))}
-        </div>
-
-      </Card>
+        );
+      })}
     </div>
   );
 }

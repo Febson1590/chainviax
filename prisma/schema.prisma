@@ -398,8 +398,8 @@ model InvestmentPlan {
       Stored in the DB under the legacy `minDurationDays`/`maxDurationDays`
       column names (unchanged to avoid a destructive migration); the field
       names here are the source of truth for the unit. */
-  minDurationHours Int?     @map("minDurationDays")
-  maxDurationHours Int?     @map("maxDurationDays")
+  minDurationHours Decimal? @db.Decimal(6, 2) @map("minDurationDays")
+  maxDurationHours Decimal? @db.Decimal(6, 2) @map("maxDurationDays")
   /** Loss-ratio band. Each tick the engine picks a random value in
       [minLossRatio, maxLossRatio] (expressed as a **percent**, 0–100),
       converts it to a probability, and rolls that probability against a
@@ -434,9 +434,9 @@ model UserInvestment {
   profitInterval   Int              @default(60)
   maxInterval      Int              @default(60)
   /** Hour-based cadence snapshot (optional — engine falls back to the
-      profitInterval seconds if null). */
-  minDurationHours Int?
-  maxDurationHours Int?
+      profitInterval seconds if null). Decimal so fractional hours (e.g. 0.5h = 30min) are supported. */
+  minDurationHours Decimal? @db.Decimal(6, 2)
+  maxDurationHours Decimal? @db.Decimal(6, 2)
   /** Loss-simulation snapshot — copied from the parent plan at investment
       start so the user's return profile doesn't drift if the plan is later
       edited. `consecutiveLosses` tracks how many losing ticks have fired
@@ -482,9 +482,9 @@ model CopyTrader {
   maxInterval     Int      @default(60)
   /** New hour-based tick cadence — the engine uses these, falling back
       to profitInterval only if both are null. Nullable so legacy traders
-      keep ticking until an admin sets them. */
-  minDurationHours Int?
-  maxDurationHours Int?
+      keep ticking until an admin sets them. Decimal so 0.5h (30min) is valid. */
+  minDurationHours Decimal? @db.Decimal(6, 2)
+  maxDurationHours Decimal? @db.Decimal(6, 2)
   minProfit       Decimal  @default(0.3) @db.Decimal(6, 4)
   maxProfit       Decimal  @default(1.2) @db.Decimal(6, 4)
   /** Loss-simulation band — same shape as InvestmentPlan. minLossRatio
@@ -520,9 +520,9 @@ model UserCopyTrade {
   maxProfit    Decimal         @db.Decimal(6, 4)
   profitInterval Int           @default(60)
   maxInterval  Int           @default(60)
-  /** Hour-based cadence snapshot from the trader at copy-start time. */
-  minDurationHours Int?
-  maxDurationHours Int?
+  /** Hour-based cadence snapshot from the trader at copy-start time. Decimal so fractional hours work. */
+  minDurationHours Decimal? @db.Decimal(6, 2)
+  maxDurationHours Decimal? @db.Decimal(6, 2)
   /** Loss-simulation snapshot — mirrors CopyTrader.minLossRatio etc. */
   minLossRatio  Decimal        @default(0) @db.Decimal(6, 4)
   maxLossRatio  Decimal        @default(0) @db.Decimal(6, 4)

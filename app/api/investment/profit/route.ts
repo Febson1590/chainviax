@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
     //     never a fixed cadence. If the band is missing (shouldn't happen —
     //     admin validation + seed backfill ensure it's populated), use a
     //     safe 1–3 hour default rather than slipping into seconds.
-    const minHours = investment.minDurationHours ?? 1;
-    const maxHours = investment.maxDurationHours ?? Math.max(3, minHours);
+    const minHours = Number(investment.minDurationHours ?? 0.5);
+    const maxHours = Number(investment.maxDurationHours ?? Math.max(3, minHours));
     const hours = maxHours > minHours
       ? minHours + Math.random() * (maxHours - minHours)
       : minHours;
@@ -151,8 +151,8 @@ export async function POST(req: NextRequest) {
     // ── 4. Schedule next tick from the HOUR band on the copy-trade snapshot.
     //     Falls back to the legacy seconds-based interval only if hours
     //     aren't set (pre-migration rows), never slipping into seconds otherwise.
-    const minHours = trade.minDurationHours ?? null;
-    const maxHours = trade.maxDurationHours ?? null;
+    const minHours = trade.minDurationHours != null ? Number(trade.minDurationHours) : null;
+    const maxHours = trade.maxDurationHours != null ? Number(trade.maxDurationHours) : null;
     let nextDelayMs: number;
     if (minHours !== null && maxHours !== null && maxHours >= minHours) {
       const hrs = maxHours > minHours
