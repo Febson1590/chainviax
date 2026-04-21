@@ -411,6 +411,33 @@
   overflow: hidden;
 }
 
+/* ── Login card + input — premium black/gold auth surface ─────────── */
+.chainviax-login-card {
+  background:
+    linear-gradient(180deg, rgba(16, 18, 26, 0.92) 0%, rgba(8, 10, 16, 0.96) 100%);
+  border: 1px solid rgba(244, 196, 64, 0.18);
+  border-radius: 22px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 60px rgba(244, 196, 64, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.chainviax-login-input {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  outline: none;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.chainviax-login-input:hover  { border-color: rgba(255, 255, 255, 0.14); }
+.chainviax-login-input:focus  {
+  border-color: rgba(244, 196, 64, 0.5);
+  background: rgba(244, 196, 64, 0.03);
+  box-shadow: 0 0 0 3px rgba(244, 196, 64, 0.08);
+}
+
 /* Floating stat chip used in the hero trading panel */
 .chainviax-mini-chip {
   background: linear-gradient(180deg, rgba(14, 16, 24, 0.96) 0%, rgba(6, 8, 14, 0.98) 100%);
