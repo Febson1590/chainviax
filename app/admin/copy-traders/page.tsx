@@ -27,7 +27,9 @@ interface CopyTrader {
   minProfit: number; maxProfit: number;
   minLossRatio: number; maxLossRatio: number;
   minLoss: number; maxLoss: number;
-  isActive: boolean; isSeeded?: boolean; userCopyTrades: { id: string }[];
+  isActive: boolean; isSeeded?: boolean;
+  isFeaturedOnLanding?: boolean; featuredOrder?: number | null;
+  userCopyTrades: { id: string }[];
 }
 interface CopyTrade {
   id: string; traderName: string; amount: number; totalEarned: number;
