@@ -1,91 +1,89 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
-  variant?: "full" | "icon" | "text";
+  /** "full" = chain icon + wordmark (default), "icon" = chain icon only */
+  variant?: "full" | "icon";
+  /** "dark" = for dark backgrounds (default, CHAINVIAX in white + gold),
+   *  "light" = for light backgrounds (CHAINVIAX in black + gold) */
+  theme?: "dark" | "light";
   size?: "sm" | "md" | "lg" | "xl";
   href?: string;
   className?: string;
+  priority?: boolean;
 }
 
-const sizes = {
-  sm: { icon: 30, textClass: "text-[15px]" },
-  md: { icon: 36, textClass: "text-[18px]" },
-  lg: { icon: 48, textClass: "text-[22px]" },
-  xl: { icon: 60, textClass: "text-[28px]" },
+// Horizontal logo source is 1956x804 (~2.43:1 aspect).
+const FULL_ASPECT = 1956 / 804;
+function fullDims(h: number) {
+  return { h, w: Math.round(h * FULL_ASPECT) };
+}
+const FULL_SIZES = {
+  sm: fullDims(28),   // w ~68
+  md: fullDims(36),   // w ~88
+  lg: fullDims(48),   // w ~117
+  xl: fullDims(60),   // w ~146
 };
 
-export function Logo({ variant = "full", size = "md", href = "/", className }: LogoProps) {
-  const s = sizes[size];
+const ICON_SIZES = {
+  sm: 28,
+  md: 36,
+  lg: 48,
+  xl: 60,
+};
 
-  const mark = (
-    <svg
-      width={s.icon}
-      height={s.icon}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="Chainviax"
-      className="drop-shadow-[0_2px_10px_rgba(234,179,8,0.35)]"
-    >
-      <defs>
-        <linearGradient id="cv-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fde68a" />
-          <stop offset="45%" stopColor="#f4c440" />
-          <stop offset="100%" stopColor="#b8860b" />
-        </linearGradient>
-        <linearGradient id="cv-gold-edge" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#fff3c4" />
-          <stop offset="100%" stopColor="#8b6508" />
-        </linearGradient>
-        <filter id="cv-soft" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="0.6" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <g filter="url(#cv-soft)" transform="translate(32 32)">
-        <g transform="rotate(-28) translate(-8 -10)">
-          <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cv-gold)" strokeWidth="5.5" />
-          <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cv-gold-edge)" strokeWidth="1" opacity="0.55" />
-        </g>
-        <g transform="rotate(-28) translate(8 10)">
-          <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cv-gold)" strokeWidth="5.5" />
-          <rect x="-12" y="-9" width="24" height="18" rx="5.5" ry="5.5" fill="none" stroke="url(#cv-gold-edge)" strokeWidth="1" opacity="0.55" />
-        </g>
-      </g>
-    </svg>
+export function Logo({
+  variant = "full",
+  theme = "dark",
+  size = "md",
+  href = "/",
+  className,
+  priority = false,
+}: LogoProps) {
+  const src =
+    variant === "icon"
+      ? "/chainviax-icon.png"
+      : theme === "light"
+        ? "/chainviax-logo-light.png"
+        : "/chainviax-logo.png";
+
+  const alt = "Chainviax";
+
+  const img = variant === "icon" ? (
+    <Image
+      src={src}
+      alt={alt}
+      width={ICON_SIZES[size]}
+      height={ICON_SIZES[size]}
+      priority={priority}
+      className="select-none"
+    />
+  ) : (
+    <Image
+      src={src}
+      alt={alt}
+      width={FULL_SIZES[size].w}
+      height={FULL_SIZES[size].h}
+      priority={priority}
+      className="select-none"
+    />
   );
 
   const content = (
-    <div className={cn("flex items-center gap-2.5 select-none", className)}>
-      {variant !== "text" && (
-        <div className="relative flex-shrink-0" style={{ width: s.icon, height: s.icon }}>
-          {mark}
-        </div>
-      )}
-      {variant !== "icon" && (
-        <span
-          className={cn("font-extrabold tracking-[0.22em] text-white", s.textClass)}
-          style={{ textShadow: "0 1px 18px rgba(234,179,8,0.18)" }}
-        >
-          CHAINVIAX
-        </span>
-      )}
-    </div>
+    <span className={cn("inline-flex items-center", className)}>
+      {img}
+    </span>
   );
 
   if (href) {
     return (
-      <Link href={href} className="hover:opacity-90 transition-opacity">
+      <Link href={href} className="inline-flex items-center hover:opacity-90 transition-opacity">
         {content}
       </Link>
     );
   }
-
   return content;
 }

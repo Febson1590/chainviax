@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─── Hosted assets ───────────────────────────────────────────────────────────
 export const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || "https://chainviax-six.vercel.app";
-const LOGO_URL = `${APP_URL}/chainviax-logo.svg`;
+const LOGO_URL = `${APP_URL}/chainviax-logo.png`;
 
 // ─── HTML template for notification emails ───────────────────────────────────
 // Based on the Vaultex layout (accent bar + card-within-page + outer footer)

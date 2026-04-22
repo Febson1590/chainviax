@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─── Hosted assets ────────────────────────────────────────────────────────────
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || "https://chainviax-six.vercel.app";
-const LOGO_URL = `${APP_URL}/chainviax-logo.svg`;
+const LOGO_URL = `${APP_URL}/chainviax-logo.png`;
 
 // ─── HTML template ────────────────────────────────────────────────────────────
 // Premium black + gold identity, Binance/Coinbase quality. All colors inline
