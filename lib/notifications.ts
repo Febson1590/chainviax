@@ -11,9 +11,11 @@ export const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || "https://chainviax-si
 const LOGO_URL = `${APP_URL}/chainviax-logo.svg`;
 
 // ─── HTML template for notification emails ───────────────────────────────────
-// Reuses the exact same dark template styling (colors, fonts, logo, footer,
-// card, accent bar) from the OTP verification email, but replaces the OTP
-// block with heading, message paragraphs, and an optional CTA button.
+// Based on the Vaultex layout (accent bar + card-within-page + outer footer)
+// but repainted to the Chainviax brand: near-black page, slightly lighter
+// card, gold accent bar + CTA + links. Colours are repeated inline with
+// !important + bgcolor attributes so Gmail / Outlook / iOS Mail render
+// consistently without auto-inverting the dark surfaces.
 
 /** Optional transaction-summary card rendered between the message body and
  *  the CTA. Used by deposit and withdrawal approval emails so users get a
@@ -31,29 +33,41 @@ export interface EmailSummaryCard {
   status?: string;
 }
 
+// Chainviax brand tokens (re-used across all blocks)
+const BG_PAGE    = "#05060a";                    // near-black page background
+const BG_CARD    = "#0b0c12";                    // card surface
+const BG_INNER   = "#0a0b10";                    // summary-card inner
+const BORDER     = "#1a1b22";                    // subtle hairline borders
+const TEXT_WHITE = "#ffffff";
+const TEXT_MUTED = "#a1a5ae";
+const TEXT_DIM   = "#6b7080";
+const ACCENT     = "#f4c440";                    // gold accent bar
+const ACCENT_HI  = "#ffe38a";                    // highlight top of gold gradient
+const ACCENT_LO  = "#e0a51e";                    // dark base of gold gradient
+
 function buildSummaryCardHtml(card: EmailSummaryCard): string {
-  // Green, neutral, and warning palettes used by the status pill.
+  const title = card.title ?? "Transaction Summary";
   const statusPalette = {
-    success: { bg: "#062012", border: "rgba(34,197,94,0.45)", color: "#4ade80" },
-    neutral: { bg: "#1a1a22", border: "rgba(244,196,64,0.45)", color: "#f4c440" },
-    warning: { bg: "#2a1a06", border: "rgba(245,158,11,0.55)", color: "#f59e0b" },
+    success: { bg: "#062012", border: "#22C55E", color: "#4ade80" },
+    neutral: { bg: "#1a1a22", border: ACCENT,   color: ACCENT },
+    warning: { bg: "#2a1a06", border: "#F59E0B", color: "#F59E0B" },
   }[card.statusColor ?? "success"];
 
   const statusPill = card.status
     ? `
       <tr>
-        <td align="center" style="padding:0 0 18px 0;">
+        <td align="right" style="padding:0 0 8px 0;">
           <span style="
             display:inline-block;
-            background-color:${statusPalette.bg};
-            color:${statusPalette.color};
+            background-color:${statusPalette.bg} !important;
+            color:${statusPalette.color} !important;
             border:1px solid ${statusPalette.border};
             border-radius:999px;
-            font-size:11px;
+            font-size:10.5px;
             font-weight:700;
-            letter-spacing:0.16em;
+            letter-spacing:0.08em;
             text-transform:uppercase;
-            padding:6px 16px;
+            padding:4px 10px;
           ">${card.status}</span>
         </td>
       </tr>`
@@ -63,20 +77,19 @@ function buildSummaryCardHtml(card: EmailSummaryCard): string {
     .map(
       (r) => `
       <tr>
-        <td style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06);">
+        <td style="padding:10px 0;border-top:1px solid ${BORDER};">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="
                 font-size:11px;
-                font-weight:700;
-                letter-spacing:0.14em;
+                font-weight:600;
+                letter-spacing:0.08em;
                 text-transform:uppercase;
-                color:#a1a5ae !important;
+                color:${TEXT_MUTED} !important;
               ">${r.label}</td>
               <td align="right" style="
-                font-size:13.5px;
-                font-weight:500;
-                color:#ffffff !important;
+                font-size:12.5px;
+                color:${TEXT_WHITE} !important;
                 font-family:${r.mono ? "'SFMono-Regular',Menlo,Consolas,monospace" : "inherit"};
                 word-break:break-all;
               ">${r.value}</td>
@@ -90,38 +103,56 @@ function buildSummaryCardHtml(card: EmailSummaryCard): string {
   const secondaryHtml = card.secondary
     ? `
       <p style="
-        margin:10px 0 0 0;
+        margin:4px 0 0 0;
         font-size:13px;
-        color:#a1a5ae !important;
+        color:${TEXT_MUTED} !important;
         text-align:center;
       ">${card.secondary.value}</p>`
     : "";
 
   return `
-    <!-- Transaction summary card (clean, no glow, thin hairline borders) -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+    <!-- Transaction summary card -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px 0;">
       <tr>
-        <td bgcolor="#0a0b10" style="
-          background-color:#0a0b10 !important;
-          border:1px solid rgba(255,255,255,0.06);
-          border-radius:14px;
-          padding:26px 24px 22px 24px;
+        <td bgcolor="${BG_INNER}" style="
+          background-color:${BG_INNER} !important;
+          border:1px solid ${BORDER};
+          border-radius:12px;
+          padding:20px 22px;
         ">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             ${statusPill}
             <tr>
-              <td align="center" style="padding:0 0 6px 0;">
+              <td align="center" style="padding-bottom:6px;">
                 <div style="
-                  font-size:30px;
+                  font-size:11px;
+                  font-weight:600;
+                  letter-spacing:0.12em;
+                  text-transform:uppercase;
+                  color:${TEXT_MUTED} !important;
+                ">${title}</div>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-bottom:12px;">
+                <div style="
+                  font-size:11px;
+                  font-weight:600;
+                  letter-spacing:0.08em;
+                  text-transform:uppercase;
+                  color:${TEXT_MUTED} !important;
+                  margin-bottom:2px;
+                ">${card.primary.label}</div>
+                <div style="
+                  font-size:28px;
                   font-weight:700;
-                  color:#ffffff !important;
-                  letter-spacing:-0.6px;
-                  line-height:1.1;
+                  color:${TEXT_WHITE} !important;
+                  letter-spacing:-0.5px;
+                  line-height:1.15;
                 ">${card.primary.value}</div>
                 ${secondaryHtml}
               </td>
             </tr>
-            <tr><td style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
             ${rowsHtml}
           </table>
         </td>
@@ -138,18 +169,14 @@ function buildNotificationEmail(opts: {
 }): string {
   const { name, heading, body, cta, summaryCard } = opts;
 
-  // Prepend a soft greeting unless the first line already starts with "Hi"
-  const startsWithGreeting = body[0]?.trim().toLowerCase().startsWith("hi ");
-  const bodyWithGreeting = startsWithGreeting ? body : [`Hi ${name},`, ...body];
-
-  const paragraphs = bodyWithGreeting
+  const paragraphs = body
     .map(
-      (p, i) => `
+      (p) => `
       <p style="
-        margin:0 0 ${i === 0 ? 22 : 18}px 0;
-        font-size:14.5px;
-        line-height:1.65;
-        color:#a1a5ae !important;
+        margin:0 0 16px 0;
+        font-size:14px;
+        line-height:1.7;
+        color:#cbd5e1 !important;
         text-align:center;
       ">${p}</p>`
     )
@@ -159,38 +186,27 @@ function buildNotificationEmail(opts: {
 
   const ctaBlock = cta
     ? `
-      <!-- CTA Button — gold, full width, subtle -->
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:4px 0 0 0;">
+      <!-- CTA Button — gold gradient -->
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;margin-bottom:8px;">
         <tr>
-          <td align="center">
+          <td align="center" style="background-color:${BG_CARD} !important;">
             <a href="${cta.url}" target="_blank" rel="noopener noreferrer" style="
-              display:block;
-              background:linear-gradient(180deg,#ffe38a 0%,#f5c94c 45%,#e0a51e 100%);
+              display:inline-block;
+              background:linear-gradient(180deg,${ACCENT_HI} 0%,${ACCENT} 45%,${ACCENT_LO} 100%);
+              background-color:${ACCENT};
               color:#1b1205 !important;
-              font-size:14.5px;
+              font-size:14px;
               font-weight:700;
               text-decoration:none;
-              padding:15px 24px;
-              border-radius:12px;
+              padding:13px 36px;
+              border-radius:10px;
               letter-spacing:0.02em;
-              border:1px solid rgba(255,232,150,0.55);
-              text-align:center;
+              border:1px solid rgba(255,232,150,0.6);
             ">${cta.label}</a>
           </td>
         </tr>
       </table>`
     : "";
-
-  /* Palette — clean black + gold. Every important surface uses both
-     bgcolor and inline style so Gmail/Outlook/iOS Mail render consistently. */
-  const BG_PAGE    = "#05060a";   // near-black page background
-  const BG_CARD    = "#0b0c12";   // card surface
-  const BORDER     = "rgba(255,255,255,0.06)"; // thin hairlines
-  const CARD_BORDER = "rgba(244,196,64,0.14)"; // very subtle gold hairline on card
-  const TEXT_WHITE = "#ffffff";
-  const TEXT_MUTED = "#a1a5ae";
-  const TEXT_DIM   = "#6b7080";
-  const GOLD       = "#f4c440";
 
   return /* html */ `
 <!DOCTYPE html>
@@ -203,9 +219,14 @@ function buildNotificationEmail(opts: {
   <meta name="supported-color-schemes" content="dark only" />
   <title>${heading}</title>
   <style>
+    /* Force dark palette regardless of the client's user preference.
+       Gmail / iOS Mail / Outlook Web all honour these when paired
+       with the bgcolor attributes below. */
     :root { color-scheme: dark; }
     body, table, td { color: ${TEXT_WHITE} !important; }
-    a { color: ${GOLD} !important; }
+    a { color: ${ACCENT} !important; }
+    /* Gmail dark-mode quirk: without this, it sometimes auto-inverts
+       already-dark backgrounds into near-white. */
     u + .body .gmail-dark-safe { background-color: ${BG_PAGE} !important; }
     @media (prefers-color-scheme: dark) {
       body, table, td { background-color: ${BG_PAGE} !important; }
@@ -228,56 +249,87 @@ function buildNotificationEmail(opts: {
     <tr>
       <td align="center" bgcolor="${BG_PAGE}" style="padding:40px 16px;background-color:${BG_PAGE} !important;">
 
-        <!-- Container — max 520px -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+        <!-- Container card — max 580px -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;">
+
+          <!-- ─── HEADER (small logo on dark page) ────────────────────── -->
+          <tr>
+            <td align="center" bgcolor="${BG_PAGE}" style="padding:8px 0 28px 0;background-color:${BG_PAGE} !important;">
+              <img
+                src="${LOGO_URL}"
+                alt="Chainviax"
+                width="140"
+                height="39"
+                style="display:block;border:0;width:140px;height:39px;outline:none;-ms-interpolation-mode:bicubic;"
+              />
+            </td>
+          </tr>
 
           <!-- ─── CARD ───────────────────────────────────────────────── -->
           <tr>
             <td bgcolor="${BG_CARD}" style="
               background-color:${BG_CARD} !important;
-              border-radius:18px;
-              border:1px solid ${CARD_BORDER};
+              border-radius:16px;
+              border:1px solid ${BORDER};
+              overflow:hidden;
             ">
 
-              <!-- Card header: centered logo + thin gold hairline -->
+              <!-- Card top accent bar -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td align="center" style="padding:36px 40px 20px 40px;">
-                    <img
-                      src="${LOGO_URL}"
-                      alt="Chainviax"
-                      width="180"
-                      height="42"
-                      style="display:block;border:0;width:180px;height:42px;outline:none;-ms-interpolation-mode:bicubic;"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td style="height:1px;line-height:1px;font-size:0;background:linear-gradient(90deg,transparent,rgba(244,196,64,0.35),transparent);">&nbsp;</td>
+                  <td bgcolor="${ACCENT}" style="height:3px;line-height:3px;font-size:0;background-color:${ACCENT} !important;border-radius:16px 16px 0 0;">&nbsp;</td>
                 </tr>
               </table>
 
               <!-- Card content -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BG_CARD}">
                 <tr>
-                  <td bgcolor="${BG_CARD}" style="padding:40px 34px 36px 34px;background-color:${BG_CARD} !important;">
+                  <td bgcolor="${BG_CARD}" style="padding:40px 40px 36px 40px;background-color:${BG_CARD} !important;">
+
+                    <!-- Large logo inside the card. The td itself is explicitly
+                         dark so the logo's white wordmark stays visible even
+                         in light-mode clients. -->
+                    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 28px auto;">
+                      <tr>
+                        <td bgcolor="${BG_CARD}" align="center" style="background-color:${BG_CARD} !important;padding:4px;">
+                          <img
+                            src="${LOGO_URL}"
+                            alt="Chainviax"
+                            width="200"
+                            height="55"
+                            style="display:block;border:0;width:200px;height:55px;outline:none;-ms-interpolation-mode:bicubic;"
+                          />
+                        </td>
+                      </tr>
+                    </table>
 
                     <!-- Heading -->
                     <h1 style="
-                      margin:0 0 12px 0;
-                      font-size:26px;
+                      margin:0 0 8px 0;
+                      font-size:22px;
                       font-weight:700;
                       color:${TEXT_WHITE} !important;
                       text-align:center;
-                      letter-spacing:-0.5px;
-                      line-height:1.2;
+                      letter-spacing:-0.3px;
                     ">${heading}</h1>
 
-                    <!-- Greeting is included in the body paragraphs for
-                         tighter spacing — the caller prepends "Hi Name," when
-                         appropriate. If no body is sent, fall back to a simple
-                         greeting. -->
-                    ${paragraphs || `<p style="margin:0 0 24px 0;font-size:14.5px;line-height:1.65;color:${TEXT_MUTED} !important;text-align:center;">Hi ${name},</p>`}
+                    <!-- Greeting -->
+                    <p style="
+                      margin:0 0 20px 0;
+                      font-size:15px;
+                      color:${TEXT_MUTED} !important;
+                      text-align:center;
+                    ">Hi ${name},</p>
+
+                    <!-- Divider -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+                      <tr>
+                        <td bgcolor="${BORDER}" style="height:1px;line-height:1px;font-size:0;background-color:${BORDER} !important;">&nbsp;</td>
+                      </tr>
+                    </table>
+
+                    <!-- Message paragraphs -->
+                    ${paragraphs}
 
                     ${cardBlock}
 
@@ -287,52 +339,60 @@ function buildNotificationEmail(opts: {
                 </tr>
               </table>
 
-              <!-- Footer inside card: automated message + copyright -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            </td>
+          </tr>
+
+          <!-- ─── FOOTER ──────────────────────────────────────────────── -->
+          <tr>
+            <td bgcolor="${BG_PAGE}" style="padding:28px 0 8px 0;background-color:${BG_PAGE} !important;" align="center">
+
+              <!-- Footer divider -->
+              <table width="80%" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px auto;">
                 <tr>
-                  <td align="center" style="padding:6px 34px 24px 34px;">
-                    <p style="
-                      margin:0 0 4px 0;
-                      font-size:12px;
-                      color:${TEXT_DIM} !important;
-                      text-align:center;
-                    ">This is an automated message. Do not reply.</p>
-                    <p style="
-                      margin:0;
-                      font-size:11.5px;
-                      color:${TEXT_DIM} !important;
-                      text-align:center;
-                    ">&copy; ${new Date().getFullYear()} Chainviax. All rights reserved.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:0 34px;">
-                    <div style="height:1px;background:rgba(255,255,255,0.05);"></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding:14px 34px 26px 34px;">
-                    <span style="font-size:10.5px;font-weight:600;letter-spacing:0.12em;color:${GOLD};margin-right:14px;">
-                      &#128274; TLS Secured
-                    </span>
-                    <span style="font-size:10.5px;font-weight:600;letter-spacing:0.12em;color:${GOLD};">
-                      &#10003; KYC Verified
-                    </span>
-                  </td>
+                  <td bgcolor="${BORDER}" style="height:1px;line-height:1px;font-size:0;background-color:${BORDER} !important;">&nbsp;</td>
                 </tr>
               </table>
+
+              <p style="
+                margin:0 0 8px 0;
+                font-size:12px;
+                color:${TEXT_MUTED} !important;
+                text-align:center;
+                line-height:1.6;
+              ">
+                This is an automated message. Please do not reply to this email.
+              </p>
+
+              <p style="
+                margin:0 0 12px 0;
+                font-size:11px;
+                color:${TEXT_DIM} !important;
+                text-align:center;
+              ">
+                &copy; ${new Date().getFullYear()} Chainviax. All rights reserved.
+              </p>
+
+              <p style="
+                margin:0;
+                font-size:10.5px;
+                font-weight:600;
+                letter-spacing:0.12em;
+                color:${ACCENT} !important;
+                text-align:center;
+              ">
+                &#128274; TLS Secured &nbsp;·&nbsp; &#10003; KYC Verified
+              </p>
 
             </td>
           </tr>
 
-          <!-- Extra outside-card breathing room -->
-          <tr><td style="height:24px;line-height:24px;font-size:0;">&nbsp;</td></tr>
-
         </table>
+        <!-- /Container card -->
 
       </td>
     </tr>
   </table>
+  <!-- /Email wrapper -->
 
 </body>
 </html>
