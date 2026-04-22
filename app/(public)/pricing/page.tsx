@@ -36,9 +36,9 @@ const headlineFees = [
   },
   {
     icon:  Wallet,
-    label: "Account & inactivity",
-    value: "None",
-    desc:  "No monthly, annual, or inactivity fees on standard accounts at the time of writing.",
+    label: "Transparent Fee Structure",
+    value: "Clear & Competitive",
+    desc:  "Chainviax applies clear and competitive fees across all services. All charges are shown before you confirm any transaction, so you always know what you are paying.",
   },
 ];
 
@@ -115,8 +115,7 @@ export default function PricingPage() {
           </Badge>
           <h1 className="text-4xl font-bold text-white mb-3">Transparent pricing.</h1>
           <p className="text-[14px] text-slate-400 max-w-xl mx-auto">
-            Straightforward trading fees with no hidden charges. The final cost of every order
-            is shown on the confirmation screen before you submit.
+            Clear and competitive fees across all services. Every charge is shown before you confirm a transaction, so you always know what you are paying.
           </p>
         </div>
 

@@ -143,18 +143,18 @@ function BrandingPanel() {
         <ul className="mt-12 space-y-[18px]">
           <Feature
             icon={<ShieldCheck className="h-[18px] w-[18px] text-amber-300" />}
-            title="Bank-Level Security"
-            desc="Your assets and data are protected with global security standards."
+            title="Secure Account"
+            desc="We use secure systems and verification processes to help protect your account and transactions."
           />
           <Feature
             icon={<TrendingUp className="h-[18px] w-[18px] text-amber-300" />}
-            title="Real-Time Insights"
-            desc="Track the market and your portfolio with real-time data."
+            title="Live Portfolio Updates"
+            desc="Track your trades and account activity with live updates."
           />
           <Feature
             icon={<Users className="h-[18px] w-[18px] text-amber-300" />}
             title="Copy Top Traders"
-            desc="Follow and copy expert traders automatically."
+            desc="Follow top traders and copy their trades automatically in real time."
           />
         </ul>
       </div>

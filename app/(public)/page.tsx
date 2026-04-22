@@ -247,7 +247,7 @@ function TwoWaysSection() {
               Buy and sell any coin, any time.
             </h3>
             <p className="text-[15px] text-slate-400 leading-[1.6] max-w-md mb-6">
-              Open the charts, place a market or limit order, and watch it fill in seconds.
+              Access simple tools to trade, track, and manage your portfolio.
             </p>
             <Link href="/markets" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
               View Markets <ArrowRight className="h-4 w-4" />
@@ -268,7 +268,7 @@ function TwoWaysSection() {
               Let a top trader invest for you.
             </h3>
             <p className="text-[15px] text-slate-400 leading-[1.6] max-w-md mb-6">
-              Pick a trader with a strong track record. Your account follows every trade they make.
+              Choose a trader and automatically mirror their trades in your account.
             </p>
             <Link href="/traders" className="inline-flex items-center gap-2 text-[13px] font-bold text-amber-300 hover:text-amber-200">
               Browse Traders <ArrowRight className="h-4 w-4" />
@@ -439,10 +439,10 @@ function MarketsSection({ initial }: { initial: MarketAsset[] }) {
 
 function FeaturesRow() {
   const items = [
-    { icon: Users,       title: "Copy Expert Traders", desc: "Follow top traders and match their trades in one tap." },
-    { icon: Activity,    title: "Track Performance",   desc: "See your profit, loss, and history in a clean dashboard." },
-    { icon: Wallet,      title: "Withdraw Anytime",    desc: "Your money is yours. Pull it out whenever you want." },
-    { icon: ShieldCheck, title: "Secure Your Account", desc: "Email codes on every sign-in. Most crypto kept offline." },
+    { icon: Users,       title: "Copy Top Traders",   desc: "Follow top traders and copy their trades automatically in real time." },
+    { icon: Activity,    title: "Track Your Trades",  desc: "Track your trades and account activity with live updates." },
+    { icon: Wallet,      title: "Withdraw Anytime",   desc: "Your money is yours. Withdraw it whenever you choose." },
+    { icon: ShieldCheck, title: "Account Security",   desc: "Your account is protected with secure systems designed to keep your data and funds safe." },
   ];
   return (
     <section className="relative z-10 px-5 sm:px-8 lg:px-12 py-24 md:py-28">
