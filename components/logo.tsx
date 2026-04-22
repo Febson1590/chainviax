@@ -22,10 +22,10 @@ function fullDims(h: number) {
   return { h, w: Math.round(h * FULL_ASPECT) };
 }
 const FULL_SIZES = {
-  sm: fullDims(28),   // w ~68
-  md: fullDims(36),   // w ~88
-  lg: fullDims(48),   // w ~117
-  xl: fullDims(60),   // w ~146
+  sm: fullDims(40),   // w ~97
+  md: fullDims(52),   // w ~126  — matches the old inline-SVG visual footprint
+  lg: fullDims(68),   // w ~165
+  xl: fullDims(88),   // w ~214
 };
 
 const ICON_SIZES = {
