@@ -16,16 +16,18 @@ interface LogoProps {
   priority?: boolean;
 }
 
-// Horizontal logo source is 1956x804 (~2.43:1 aspect).
-const FULL_ASPECT = 1956 / 804;
-function fullDims(h: number) {
-  return { h, w: Math.round(h * FULL_ASPECT) };
+// Trimmed horizontal logos — content only, no surrounding padding.
+// Dark PNG is 1589x254 (~6.26:1). Light PNG is 1553x224 (~6.93:1).
+const DARK_ASPECT  = 1589 / 254;
+const LIGHT_ASPECT = 1553 / 224;
+function fullDims(h: number, aspect: number) {
+  return { h, w: Math.round(h * aspect) };
 }
-const FULL_SIZES = {
-  sm: fullDims(56),   // w ~136
-  md: fullDims(76),   // w ~185  — nav
-  lg: fullDims(100),  // w ~243
-  xl: fullDims(128),  // w ~311  — auth hero
+const FULL_HEIGHTS = {
+  sm: 26,
+  md: 38,   // fits a standard h-16 navbar with ~13px padding top/bottom
+  lg: 50,
+  xl: 68,   // auth hero
 };
 
 const ICON_SIZES = {
@@ -61,16 +63,21 @@ export function Logo({
       priority={priority}
       className="select-none"
     />
-  ) : (
-    <Image
-      src={src}
-      alt={alt}
-      width={FULL_SIZES[size].w}
-      height={FULL_SIZES[size].h}
-      priority={priority}
-      className="select-none"
-    />
-  );
+  ) : (() => {
+      const h = FULL_HEIGHTS[size];
+      const aspect = theme === "light" ? LIGHT_ASPECT : DARK_ASPECT;
+      const { w } = fullDims(h, aspect);
+      return (
+        <Image
+          src={src}
+          alt={alt}
+          width={w}
+          height={h}
+          priority={priority}
+          className="select-none"
+        />
+      );
+    })();
 
   const content = (
     <span className={cn("inline-flex items-center", className)}>
