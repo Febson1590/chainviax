@@ -452,6 +452,11 @@ model UserInvestment {
   nextProfitAt     DateTime?
   startedAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+  /** Set by adminEndInvestment when the admin closes the trade.
+      Records when the trade was ended and the final amount released
+      back to the user's Available Balance (principal + max(profit, 0)). */
+  completedAt      DateTime?
+  finalReturn      Decimal?         @db.Decimal(20, 2)
 
   user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan  InvestmentPlan?  @relation(fields: [planId], references: [id])
@@ -695,6 +700,7 @@ enum ActivityType {
   INVESTMENT_FUNDS_ADDED
   INVESTMENT_UPGRADED
   INVESTMENT_CANCELLED
+  INVESTMENT_ENDED
   COPY_TRADE_STARTED
   COPY_TRADE_PROFIT
   COPY_TRADE_LOSS

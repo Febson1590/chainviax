@@ -5,7 +5,7 @@ import { getKycStatusForUser } from "@/lib/kyc";
 import type { Metadata } from "next";
 import CopyTradingClient from "./copy-trading-client";
 
-export const metadata: Metadata = { title: "Copy Trading — VaultEx" };
+export const metadata: Metadata = { title: "Copy Trading — Chainviax" };
 
 export default async function CopyTradingPage() {
   const session = await auth();

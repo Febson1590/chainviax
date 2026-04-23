@@ -14,6 +14,7 @@ import {
   adminDeleteAllSeededCopyTraders,
 } from "@/lib/actions/investment";
 import { COUNTRIES_SORTED, flagEmoji } from "@/lib/countries";
+import { secondsToDisplay, displayToSeconds, type DurationUnit, UNIT_LABELS, resolvePlanSecs } from "@/lib/duration";
 
 interface CopyTrader {
   id: string; name: string; avatarUrl: string | null;
@@ -27,9 +28,7 @@ interface CopyTrader {
   minProfit: number; maxProfit: number;
   minLossRatio: number; maxLossRatio: number;
   minLoss: number; maxLoss: number;
-  isActive: boolean; isSeeded?: boolean;
-  isFeaturedOnLanding?: boolean; featuredOrder?: number | null;
-  userCopyTrades: { id: string }[];
+  isActive: boolean; isSeeded?: boolean; userCopyTrades: { id: string }[];
 }
 interface CopyTrade {
   id: string; traderName: string; amount: number; totalEarned: number;
@@ -97,16 +96,31 @@ function TraderModal({ trader, onClose, onSuccess }: {
     minCopyAmount:    String(trader?.minCopyAmount ?? 100),
     profitInterval:   String(trader?.profitInterval ?? 60),
     maxInterval:      String(trader?.maxInterval ?? 60),
-    minDurationHours: trader?.minDurationHours != null ? String(trader.minDurationHours) : "0.5",
-    maxDurationHours: trader?.maxDurationHours != null ? String(trader.maxDurationHours) : "3",
+    // Duration stored as seconds (profitInterval / maxInterval).
+    // `resolvePlanSecs` is the shared helper that already handles the
+    // "is this a legit short value or a legacy placeholder?" distinction
+    // correctly — same helper the investment plan form uses. Ensures a
+    // saved 1-minute cadence (60 s) renders as "1 Minute" on reopen,
+    // not as an empty field that silently reverts on save.
+    ...(() => {
+      const { minSecs, maxSecs } = trader
+        ? resolvePlanSecs(trader)
+        : { minSecs: 0, maxSecs: 0 };
+      const minD = secondsToDisplay(minSecs);
+      const maxD = secondsToDisplay(maxSecs);
+      return {
+        minDurationValue: minSecs > 0 ? String(minD.value) : "",
+        minDurationUnit:  (minSecs > 0 ? minD.unit : "hours") as DurationUnit,
+        maxDurationValue: maxSecs > 0 ? String(maxD.value) : "",
+        maxDurationUnit:  (maxSecs > 0 ? maxD.unit : "hours") as DurationUnit,
+      };
+    })(),
     minProfit:        String(trader?.minProfit ?? 0.3),
     maxProfit:        String(trader?.maxProfit ?? 1.2),
     minLossRatio:     String(trader?.minLossRatio ?? 0),
     maxLossRatio:     String(trader?.maxLossRatio ?? 0),
     minLoss:          String(trader?.minLoss ?? 0),
     maxLoss:          String(trader?.maxLoss ?? 0),
-    isFeaturedOnLanding: trader?.isFeaturedOnLanding ?? false,
-    featuredOrder:    trader?.featuredOrder != null ? String(trader.featuredOrder) : "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarUrl, setAvatarUrl] = useState<string | null>(trader?.avatarUrl ?? null);
@@ -129,13 +143,12 @@ function TraderModal({ trader, onClose, onSuccess }: {
     if (parseFloat(form.maxProfit) < parseFloat(form.minProfit))
       errs.maxProfit = "Max must be ≥ min profit";
 
-    if (!form.minDurationHours.trim()) errs.minDurationHours = "Required (hours)";
-    else if (parseFloat(form.minDurationHours) <= 0) errs.minDurationHours = "Must be greater than 0";
-    if (!form.maxDurationHours.trim()) errs.maxDurationHours = "Required (hours)";
-    else if (parseFloat(form.maxDurationHours) <= 0) errs.maxDurationHours = "Must be greater than 0";
-    if (!errs.minDurationHours && !errs.maxDurationHours &&
-        parseFloat(form.maxDurationHours) < parseFloat(form.minDurationHours))
-      errs.maxDurationHours = "Max must be ≥ min duration";
+    const minDurSecs = displayToSeconds(parseFloat(form.minDurationValue), form.minDurationUnit);
+    const maxDurSecs = displayToSeconds(parseFloat(form.maxDurationValue), form.maxDurationUnit);
+    if (!form.minDurationValue.trim() || minDurSecs <= 0) errs.minDurationValue = "Enter a positive value";
+    if (!form.maxDurationValue.trim() || maxDurSecs <= 0) errs.maxDurationValue = "Enter a positive value";
+    if (!errs.minDurationValue && !errs.maxDurationValue && maxDurSecs < minDurSecs)
+      errs.maxDurationValue = "Max must be ≥ min duration";
 
     if (!pct0to100(form.minLossRatio)) errs.minLossRatio = "Must be between 0 and 100";
     if (!pct0to100(form.maxLossRatio)) errs.maxLossRatio = "Must be between 0 and 100";
@@ -186,20 +199,19 @@ function TraderModal({ trader, onClose, onSuccess }: {
         riskLevel:        form.riskLevel || "MEDIUM",
         followers:        parseInt(form.followers)       || 0,
         minCopyAmount:    parseFloat(form.minCopyAmount) || 0,
-        // Hour-based cadence drives the engine. Legacy second intervals
-        // kept at 60s server-side; not exposed in the admin form anymore.
-        profitInterval:   60,
-        maxInterval:      60,
-        minDurationHours: parseFloat(form.minDurationHours) || 0.5,
-        maxDurationHours: parseFloat(form.maxDurationHours) || 3,
+        // Canonical seconds storage. Engine reads profitInterval /
+        // maxInterval directly; legacy hour columns are left null
+        // (the DB migration in seed.ts copies old hour values over).
+        profitInterval:   displayToSeconds(parseFloat(form.minDurationValue), form.minDurationUnit),
+        maxInterval:      displayToSeconds(parseFloat(form.maxDurationValue), form.maxDurationUnit),
+        minDurationHours: null,
+        maxDurationHours: null,
         minProfit:        parseFloat(form.minProfit)     || 0,
         maxProfit:        parseFloat(form.maxProfit)     || 0,
         minLossRatio:     parseFloat(form.minLossRatio)  || 0,
         maxLossRatio:     parseFloat(form.maxLossRatio)  || 0,
         minLoss:          parseFloat(form.minLoss)       || 0,
         maxLoss:          parseFloat(form.maxLoss)       || 0,
-        isFeaturedOnLanding: form.isFeaturedOnLanding,
-        featuredOrder:    form.featuredOrder.trim() === "" ? null : (parseInt(form.featuredOrder) || null),
       };
       const r = trader
         ? await adminUpdateCopyTrader(trader.id, payload)
@@ -385,22 +397,38 @@ function TraderModal({ trader, onClose, onSuccess }: {
             </div>
           </div>
 
-          {/* Duration (hours) — tick cadence */}
+          {/* Duration — unified (value, unit) pair. Canonical seconds in DB. */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>Min Duration (hours)</label>
-              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
-                value={form.minDurationHours} onChange={e => set("minDurationHours", e.target.value)}
-                placeholder="e.g. 0.5" />
-              {errors.minDurationHours && <p className="text-[11px] text-red-400 mt-1">{errors.minDurationHours}</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Max Duration (hours)</label>
-              <input type="number" min={0.25} step="0.25" className={inputCls + " mt-1"}
-                value={form.maxDurationHours} onChange={e => set("maxDurationHours", e.target.value)}
-                placeholder="e.g. 3" />
-              {errors.maxDurationHours && <p className="text-[11px] text-red-400 mt-1">{errors.maxDurationHours}</p>}
-            </div>
+            {(["Min", "Max"] as const).map((side) => {
+              const vKey = side === "Min" ? "minDurationValue" : "maxDurationValue";
+              const uKey = side === "Min" ? "minDurationUnit"  : "maxDurationUnit";
+              return (
+                <div key={side}>
+                  <label className={labelCls}>{side} Duration</label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      type="number" min={0} step="0.01"
+                      value={form[vKey] as string}
+                      onChange={(e) => set(vKey, e.target.value)}
+                      placeholder={side === "Min" ? "e.g. 5" : "e.g. 15"}
+                      className={inputCls + " flex-1"}
+                    />
+                    <div className="relative shrink-0">
+                      <select
+                        value={form[uKey] as DurationUnit}
+                        onChange={(e) => set(uKey, e.target.value)}
+                        className={inputCls + " appearance-none pr-8 w-[110px]"}
+                      >
+                        <option value="minutes" className="bg-[#0d1e3a]">{UNIT_LABELS.minutes}</option>
+                        <option value="hours"   className="bg-[#0d1e3a]">{UNIT_LABELS.hours}</option>
+                      </select>
+                      <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  {errors[vKey] && <p className="text-[11px] text-red-400 mt-1">{errors[vKey]}</p>}
+                </div>
+              );
+            })}
           </div>
           <p className="text-[11px] text-slate-500 -mt-2">
             Each tick fires after a random wait between min and max duration.
@@ -452,38 +480,6 @@ function TraderModal({ trader, onClose, onSuccess }: {
               Loss magnitude is a random % between Min Loss and Max Loss, applied to the copied amount.
               Back-to-back losses are capped at 2 in a row.
             </p>
-          </div>
-
-          {/* Landing-page featuring */}
-          <div className="rounded-xl p-4 border border-amber-500/25 bg-amber-500/[0.04]">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1 w-4 h-4 accent-amber-400"
-                checked={form.isFeaturedOnLanding}
-                onChange={(e) => setForm((f) => ({ ...f, isFeaturedOnLanding: e.target.checked }))}
-              />
-              <div className="flex-1">
-                <div className="text-[13px] font-semibold text-amber-200">Feature on landing page</div>
-                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                  The public home page shows up to 3 traders. If more than 3 are featured, the lowest <em>featured order</em> numbers win.
-                </p>
-              </div>
-            </label>
-            {form.isFeaturedOnLanding && (
-              <div className="mt-3 pl-7">
-                <label className={labelCls}>Featured order (optional)</label>
-                <input
-                  type="number"
-                  min={1}
-                  className={inputCls + " mt-1 w-32"}
-                  value={form.featuredOrder}
-                  onChange={(e) => set("featuredOrder", e.target.value)}
-                  placeholder="e.g. 1"
-                />
-                <p className="text-[11px] text-slate-500 mt-1">Lower number appears first. Leave blank to rank by performance.</p>
-              </div>
-            )}
           </div>
         </div>
 
@@ -853,37 +849,6 @@ export default function AdminCopyTradersPage() {
         ))}
       </div>
 
-      {/* ── Featured-on-landing summary ── */}
-      {tab === "traders" && (() => {
-        const featured = traders.filter(t => t.isFeaturedOnLanding && t.isActive);
-        const shown = [...featured].sort((a, b) => {
-          const ao = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-          const bo = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-          if (ao !== bo) return ao - bo;
-          return Number(b.performance30d) - Number(a.performance30d);
-        }).slice(0, 3);
-        const tone =
-          featured.length === 3 ? "border-emerald-500/25 bg-emerald-500/[0.04] text-emerald-300"
-          : featured.length === 0 ? "border-slate-500/20 bg-slate-500/[0.04] text-slate-400"
-          : featured.length > 3 ? "border-amber-500/25 bg-amber-500/[0.05] text-amber-300"
-          : "border-amber-500/25 bg-amber-500/[0.05] text-amber-300";
-        return (
-          <div className={`rounded-xl border px-4 py-3 text-[12.5px] flex flex-wrap items-center gap-x-3 gap-y-1.5 ${tone}`}>
-            <span className="font-semibold uppercase tracking-wider text-[10px]">Landing Page</span>
-            <span>
-              {featured.length === 0 ? "No traders are featured — the landing Top Traders section will stay hidden."
-                : featured.length > 3 ? `${featured.length} marked featured — landing will only show the 3 with the lowest featured order.`
-                : `${featured.length}/3 featured${featured.length < 3 ? " — add a few more to fill the row" : ""}.`}
-            </span>
-            {shown.length > 0 && (
-              <span className="text-slate-400 font-normal">
-                Showing: {shown.map(t => t.name).join(" · ")}
-              </span>
-            )}
-          </div>
-        );
-      })()}
-
       {/* ── Traders Table ── */}
       {tab === "traders" && (
         <div className="glass-card rounded-xl overflow-hidden">
@@ -953,13 +918,6 @@ export default function AdminCopyTradersPage() {
                                     Seeded
                                   </span>
                                 )}
-                                {tr.isFeaturedOnLanding && (
-                                  <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-300"
-                                    title={`Featured on landing page${tr.featuredOrder != null ? ` · order ${tr.featuredOrder}` : ""}`}
-                                  >
-                                    ★ Featured{tr.featuredOrder != null ? ` #${tr.featuredOrder}` : ""}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -970,9 +928,17 @@ export default function AdminCopyTradersPage() {
                         <td className="px-4 py-3 text-xs text-slate-400">{tr.followers.toLocaleString()}</td>
                         <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{tr.minProfit}%–{tr.maxProfit}%</td>
                         <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
-                          {tr.minDurationHours !== null && tr.maxDurationHours !== null
-                            ? `${tr.minDurationHours}–${tr.maxDurationHours}h`
-                            : <span className="text-slate-600">—</span>}
+                          {(() => {
+                            // Same shared resolver as the edit modal — a
+                            // legit 1-minute trader renders "1–2m", not "—".
+                            const { minSecs, maxSecs } = resolvePlanSecs(tr);
+                            if (minSecs <= 0 || maxSecs <= 0) return <span className="text-slate-600">—</span>;
+                            const md = secondsToDisplay(minSecs);
+                            const xd = secondsToDisplay(maxSecs);
+                            const unit = (md.unit === "hours" || xd.unit === "hours") ? "h" : "m";
+                            const div = unit === "h" ? 3600 : 60;
+                            return `${minSecs / div}–${maxSecs / div}${unit}`;
+                          })()}
                         </td>
                         <td className="px-4 py-3 text-xs text-white font-semibold">{tr.userCopyTrades.length}</td>
                         <td className="px-4 py-3">

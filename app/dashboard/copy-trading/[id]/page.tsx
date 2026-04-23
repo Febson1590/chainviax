@@ -5,7 +5,7 @@ import { getKycStatusForUser } from "@/lib/kyc";
 import type { Metadata } from "next";
 import TraderDetailClient from "./trader-detail-client";
 
-export const metadata: Metadata = { title: "Trader — VaultEx" };
+export const metadata: Metadata = { title: "Trader — Chainviax" };
 
 interface Params {
   params: Promise<{ id: string }>;

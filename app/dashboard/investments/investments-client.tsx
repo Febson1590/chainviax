@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { userStartInvestment } from "@/lib/actions/investment";
 import { formatCurrency } from "@/lib/utils";
+import { planCycleLabel } from "@/lib/duration";
 import { KycBanner } from "@/components/dashboard/kyc-banner";
 import type { KycStatus } from "@/lib/kyc";
 
@@ -44,10 +45,12 @@ function fmtPct(n: number) {
   return Number.isInteger(n) ? `${n}.0%` : `${n}%`;
 }
 
-function fmtDuration(min: number | null, max: number | null) {
-  if (min === null || max === null) return null;
-  if (min === max) return `Every ${min} hour${min === 1 ? "" : "s"}`;
-  return `Every ${min}–${max} hours`;
+function fmtDuration(plan: Plan): string | null {
+  // Delegate to the shared resolver in lib/duration so the user page,
+  // admin list, and admin modal all produce the exact same label for
+  // the same plan.
+  const label = planCycleLabel(plan);
+  return label === "—" ? null : label;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -140,7 +143,7 @@ function PlanCard({
   disabled: boolean;
   onSelect: () => void;
 }) {
-  const duration = fmtDuration(plan.minDurationHours, plan.maxDurationHours);
+  const duration = fmtDuration(plan);
 
   return (
     <div
@@ -233,8 +236,8 @@ function PlanCard({
             <span
               className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
               style={{
-                background: "rgba(234, 179, 8,0.10)",
-                border:     "1px solid rgba(234, 179, 8,0.25)",
+                background: "rgba(14,165,233,0.10)",
+                border:     "1px solid rgba(14,165,233,0.25)",
               }}
             >
               <Calendar size={13} className="text-sky-400" />
@@ -305,7 +308,7 @@ function InvestModal({
   const exceedsMax = plan.maxAmount !== null && val > plan.maxAmount;
   const canAfford = val <= usdBalance;
   const needsDeposit = usdBalance < plan.minAmount;
-  const duration = fmtDuration(plan.minDurationHours, plan.maxDurationHours);
+  const duration = fmtDuration(plan);
 
   function submit() {
     if (!meetsMin) {
