@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PortfolioChart } from "@/components/dashboard/portfolio-chart";
-import { addInvestmentFunds, stopCopyTrade, getUpgradePlans, userUpgradeInvestmentPlan } from "@/lib/actions/investment";
+import { addInvestmentFunds, getUpgradePlans, userUpgradeInvestmentPlan } from "@/lib/actions/investment";
 import {
   TrendingUp, Activity, Plus, ShieldAlert, Loader2, Clock,
-  Users, StopCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
+  Users, XCircle, ArrowDownToLine, ArrowUpFromLine,
   History, Copy as CopyIcon, ChevronRight,
 } from "lucide-react";
 
@@ -503,16 +503,20 @@ export default function DashboardClient({
   const [chartRefreshKey, setChartRefreshKey] = useState(0);
   const [showAddFunds, setShowAddFunds]   = useState(false);
   const [showUpgrade,  setShowUpgrade]    = useState(false);
-  const [stoppingId, setStoppingId]       = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── Derived values ────────────────────────────────────────────── */
   const activeCopyTrades = copyTrades.filter(t => t.status !== "STOPPED");
   const copyTradingTotal = activeCopyTrades.reduce((s, t) => s + t.amount, 0);
+  // Only ACTIVE/PAUSED investments count toward "Active" portfolio figures.
+  // COMPLETED/CANCELLED have already been settled — principal + profit are
+  // back in the wallet, so counting them here would double-display value.
+  const isInvestmentLive =
+    !!investment && (investment.status === "ACTIVE" || investment.status === "PAUSED");
   const totalEarned =
-    (investment ? investment.totalEarned : 0) +
+    (isInvestmentLive ? investment!.totalEarned : 0) +
     activeCopyTrades.reduce((s, t) => s + t.totalEarned, 0);
-  const activeInvested = investment && investment.status !== "CANCELLED" ? investment.amount : 0;
+  const activeInvested = isInvestmentLive ? investment!.amount : 0;
   const roiPct = activeInvested > 0 ? (totalEarned / activeInvested) * 100 : 0;
 
   // Daily change — computed from chart data (last vs previous point)
@@ -553,14 +557,6 @@ export default function DashboardClient({
   }
 
   /* ── Handlers ─────────────────────────────────────────────────── */
-  async function handleStopCopy(id: string, name: string) {
-    setStoppingId(id);
-    const r = await stopCopyTrade(id);
-    setStoppingId(null);
-    if (r.error) { toast.error(r.error); return; }
-    toast.success(`Stopped copying ${name}`);
-    refresh();
-  }
 
   /* ══════════════════════════════════════════════════════════════ */
   return (
@@ -589,11 +585,15 @@ export default function DashboardClient({
       <Card className="overflow-hidden">
         <div className="px-5 pt-5 pb-4">
           <p className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-semibold mb-2">
-            Total Balance
+            Available Balance
           </p>
           <div className="text-[32px] sm:text-[36px] font-bold text-white tracking-tight leading-none">
             {fmt(usdBalance)}
           </div>
+          <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+            Funds ready to invest, upgrade, or withdraw. Earned profit from active
+            trades is shown below and released when a trade ends.
+          </p>
 
           {daily !== null && (
             <div className="mt-2 text-[13px]">
@@ -689,41 +689,53 @@ export default function DashboardClient({
         </div>
       </Card>
 
-      {/* ── 5. ACTIVE INVESTMENT CARD ───────────────────────── */}
-      {investment && investment.status !== "CANCELLED" ? (
+      {/* ── 5. ACTIVE INVESTMENT CARD ─────────────────────────
+          Only render while the trade is live. Once the admin ends
+          the trade (COMPLETED) or cancels it, principal + profit are
+          already in the wallet and the card would otherwise lie
+          about "active trading." History is available on the
+          investments page. */}
+      {isInvestmentLive ? (
         <Card>
           <CardHeader
             icon={TrendingUp}
-            title={`${investment.planName}`}
+            title={`${investment!.planName}`}
             action={
               <span
                 className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                  investment.status === "ACTIVE"
+                  investment!.status === "ACTIVE"
                     ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
                     : "bg-yellow-500/10 border-yellow-500/25 text-yellow-400"
                 }`}
               >
-                {investment.status}
+                {investment!.status}
               </span>
             }
           />
           <div className="px-5 py-4 space-y-3">
-            <MetaRow label="Invested" value={fmt(investment.amount)} />
-            <MetaRow label="Profit"   value={fmt(investment.totalEarned)} valueClassName="text-emerald-400" />
+            <MetaRow label="Invested" value={fmt(investment!.amount)} />
+            <MetaRow label="Profit"   value={fmt(investment!.totalEarned)} valueClassName="text-emerald-400" />
             <MetaRow
-              label="Cycle"
-              value={(() => {
-                const minH = (investment as any).minDurationHours as number | null | undefined;
-                const maxH = (investment as any).maxDurationHours as number | null | undefined;
-                const cycle =
-                  minH != null && maxH != null
-                    ? (minH === maxH ? `every ${minH}h` : `every ${minH}–${maxH}h`)
-                    : "variable";
-                return `${investment.minProfit}%–${investment.maxProfit}% · ${cycle}`;
-              })()}
+              label="Status"
+              value={
+                investment!.status === "ACTIVE" ? (
+                  <span className="inline-flex items-center gap-1.5 text-emerald-400 font-semibold">
+                    <span className="relative flex w-1.5 h-1.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                    Active trading cycle
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-yellow-400 font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                    Paused by admin
+                  </span>
+                )
+              }
             />
           </div>
-          {investment.status === "ACTIVE" && (
+          {investment!.status === "ACTIVE" && (
             <div className="px-5 pb-5 flex gap-2">
               <Button
                 className="flex-1 h-10 bg-sky-500/[0.10] hover:bg-sky-500/[0.18] text-sky-300 border border-sky-500/25 font-semibold text-[13px]"
@@ -762,7 +774,6 @@ export default function DashboardClient({
           />
           <div className="divide-y divide-white/[0.04]">
             {activeCopyTrades.map((trade) => {
-              const stopping = stoppingId === trade.id;
               const hue = [...trade.traderName].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
               const initials = trade.traderName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
               return (
@@ -796,22 +807,11 @@ export default function DashboardClient({
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-[13px] font-semibold text-emerald-400 tabular-nums">
-                      +{fmt(trade.totalEarned)}
+                    <div className={`text-[13px] font-semibold tabular-nums ${Number(trade.totalEarned) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {Number(trade.totalEarned) >= 0 ? "+" : "-"}{fmt(Math.abs(Number(trade.totalEarned)))}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">profit</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">earned profit</div>
                   </div>
-                  <Button
-                    size="sm"
-                    disabled={stopping}
-                    onClick={() => handleStopCopy(trade.id, trade.traderName)}
-                    className="h-8 px-3 text-[11px] font-semibold bg-red-500/[0.10] hover:bg-red-500/[0.18] text-red-400 border border-red-500/20 flex-shrink-0"
-                  >
-                    {stopping
-                      ? <Loader2 size={11} className="animate-spin" />
-                      : <><StopCircle size={11} className="mr-1" /> Stop</>
-                    }
-                  </Button>
                 </div>
               );
             })}
@@ -842,6 +842,13 @@ export default function DashboardClient({
             {activity.slice(0, 5).map((item) => {
               const color = ACT_COLOR[item.type] ?? "text-slate-300";
               const dot   = ACT_DOT[item.type]   ?? "bg-slate-500";
+              // Render any non-null, non-zero amount. Losses are
+              // negative and need the red colour + "-" prefix; profits
+              // are positive with emerald + "+".
+              const amt      = item.amount;
+              const hasAmt   = amt != null && amt !== 0;
+              const isLoss   = hasAmt && (amt as number) < 0;
+              const amtColor = isLoss ? "text-red-400" : color;
               return (
                 <div key={item.id} className="flex items-center gap-3 px-5 py-3">
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
@@ -853,9 +860,11 @@ export default function DashboardClient({
                       {timeAgo(item.createdAt)}
                     </div>
                   </div>
-                  {item.amount != null && item.amount > 0 && (
-                    <div className={`text-[13px] font-semibold flex-shrink-0 tabular-nums ${color}`}>
-                      +{fmt(item.amount)}
+                  {hasAmt && (
+                    <div className={`text-[13px] font-semibold flex-shrink-0 tabular-nums ${amtColor}`}>
+                      {isLoss
+                        ? `-${fmt(Math.abs(amt as number))}`
+                        : `+${fmt(amt as number)}`}
                     </div>
                   )}
                 </div>
@@ -977,7 +986,7 @@ function KycBanner({ kycStatus }: { kycStatus: "not_submitted" | "pending" | "ap
   if (kycStatus === "pending") {
     return (
       <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-4 border border-sky-500/20"
-        style={{ background: "rgba(234, 179, 8,0.05)" }}
+        style={{ background: "rgba(14,165,233,0.05)" }}
       >
         <div className="flex items-center gap-3">
           <Clock className="h-5 w-5 text-sky-400 flex-shrink-0" />
@@ -1087,7 +1096,11 @@ function PortfolioChartWrapper({
 
 const ACT_COLOR: Record<string, string> = {
   INVESTMENT_PROFIT:     "text-emerald-400",
+  INVESTMENT_LOSS:       "text-red-400",
+  INVESTMENT_ENDED:      "text-emerald-300",
   COPY_TRADE_PROFIT:     "text-sky-400",
+  COPY_TRADE_LOSS:       "text-red-400",
+  COPY_TRADE_ENDED:      "text-emerald-300",
   INVESTMENT_STARTED:    "text-violet-400",
   COPY_TRADE_STARTED:    "text-blue-400",
   INVESTMENT_FUNDS_ADDED:"text-yellow-400",
@@ -1098,7 +1111,11 @@ const ACT_COLOR: Record<string, string> = {
 
 const ACT_DOT: Record<string, string> = {
   INVESTMENT_PROFIT:     "bg-emerald-400",
+  INVESTMENT_LOSS:       "bg-red-400",
+  INVESTMENT_ENDED:      "bg-emerald-300",
   COPY_TRADE_PROFIT:     "bg-sky-400",
+  COPY_TRADE_LOSS:       "bg-red-400",
+  COPY_TRADE_ENDED:      "bg-emerald-300",
   INVESTMENT_STARTED:    "bg-violet-400",
   COPY_TRADE_STARTED:    "bg-blue-400",
   INVESTMENT_FUNDS_ADDED:"bg-yellow-400",

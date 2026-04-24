@@ -540,6 +540,11 @@ model UserCopyTrade {
   nextProfitAt DateTime?
   startedAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
+  /** Set by adminEndCopyTrade when the admin closes the trade.
+      Principal + max(totalEarned, 0) is released to the user's
+      Available Balance and recorded on these columns. */
+  completedAt  DateTime?
+  finalReturn  Decimal?        @db.Decimal(20, 2)
 
   user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   trader  CopyTrader @relation(fields: [traderId], references: [id])
@@ -706,4 +711,5 @@ enum ActivityType {
   COPY_TRADE_LOSS
   COPY_TRADE_STOPPED
   COPY_TRADE_PAUSED
+  COPY_TRADE_ENDED
 }

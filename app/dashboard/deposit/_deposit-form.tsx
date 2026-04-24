@@ -272,7 +272,7 @@ export default function DepositForm({
                   className={`
                     flex-shrink-0 flex items-center gap-2 h-11 px-4 rounded-xl border transition-all
                     ${isActive
-                      ? "border-sky-500/50 bg-sky-500/[0.08] shadow-[0_0_0_1px_rgba(234, 179, 8,0.2)]"
+                      ? "border-sky-500/50 bg-sky-500/[0.08] shadow-[0_0_0_1px_rgba(14,165,233,0.2)]"
                       : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]"}
                   `}
                 >

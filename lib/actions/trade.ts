@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { canPerform, blockReason } from "@/lib/user-status";
 
 export async function placeTrade(data: {
   assetId: string;
@@ -21,7 +22,8 @@ export async function placeTrade(data: {
     db.wallet.findUnique({ where: { userId_currency: { userId, currency: "USD" } } }),
   ]);
 
-  if (!user || user.status !== "ACTIVE") return { error: "Account not active" };
+  if (!user) return { error: "Account not found" };
+  if (!canPerform(user.status, "trade")) return { error: blockReason(user.status, "trade") };
   if (!asset || !asset.isActive) return { error: "Asset not available" };
   if (!usdWallet) return { error: "USD wallet not found" };
 
@@ -115,13 +117,17 @@ export async function placeTrade(data: {
     },
   });
 
-  // Create transaction record
+  // Transaction row tracks the USD leg of the trade so the balance
+  // chart on the dashboard includes the BUY/SELL movements. The
+  // asset-side details (quantity, symbol, price) stay in the
+  // tradeOrder row above; here we record the dollars.
+  const usdMovement = data.side === "BUY" ? total + fee : total - fee;
   await db.transaction.create({
     data: {
       userId,
       type: data.side === "BUY" ? "BUY" : "SELL",
-      currency: asset.symbol,
-      amount: quantity,
+      currency: "USD",
+      amount: usdMovement,
       fee,
       status: "COMPLETED",
       description: `${data.side} ${quantity} ${asset.symbol} @ $${price.toFixed(2)}`,

@@ -94,6 +94,15 @@ export async function runInvestmentTick(
   if (investment.status !== "ACTIVE") return null;
   if (!investment.nextProfitAt || investment.nextProfitAt > now) return null;
 
+  // Hard gate: SUSPENDED users stop earning entirely. FROZEN /
+  // RESTRICTED users keep passively earning on their existing
+  // investment (they just can't open new positions or move money).
+  const u = await db.user.findUnique({
+    where:  { id: investment.userId },
+    select: { status: true },
+  });
+  if (!u || u.status === "SUSPENDED") return null;
+
   // 1. Per-tick loss probability from the configured band.
   const minRatioPct = Number(investment.minLossRatio ?? 0);
   const maxRatioPct = Number(investment.maxLossRatio ?? 0);
@@ -188,6 +197,14 @@ export async function runCopyTradeTick(
   if (trade.status !== "ACTIVE") return null;
   if (!trade.nextProfitAt || trade.nextProfitAt > now) return null;
 
+  // Same status gate as runInvestmentTick — SUSPENDED users don't
+  // accrue copy-trade profits either.
+  const u = await db.user.findUnique({
+    where:  { id: trade.userId },
+    select: { status: true },
+  });
+  if (!u || u.status === "SUSPENDED") return null;
+
   const minRatioPct = Number(trade.minLossRatio ?? 0);
   const maxRatioPct = Number(trade.maxLossRatio ?? 0);
   const currentRatioPct = maxRatioPct > minRatioPct
@@ -232,6 +249,11 @@ export async function runCopyTradeTick(
   const nextProfitAt = new Date(anchor.getTime() + Math.round(secs * 1000));
   const nextStreak   = isLoss ? (trade.consecutiveLosses ?? 0) + 1 : 0;
 
+  // Copy-trade ticks — same split-balance rule as investment ticks:
+  // do NOT touch the USD wallet. Profit + loss accumulate on
+  // `trade.totalEarned` until an admin ends the trade via
+  // `adminEndCopyTrade`, which releases principal + max(earned, 0) to
+  // the user's Available Balance in one atomic move.
   await db.$transaction([
     db.userCopyTrade.update({
       where: { id: trade.id },
@@ -241,10 +263,6 @@ export async function runCopyTradeTick(
         nextProfitAt,
         consecutiveLosses: nextStreak,
       },
-    }),
-    db.wallet.updateMany({
-      where: { userId: trade.userId, currency: "USD" },
-      data:  { balance: { increment: delta } },
     }),
     db.activityLog.create({
       data: {
